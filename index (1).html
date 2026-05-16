@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReelBot — Visual Trend Discovery Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1e3a5f;--navy2:#152d4a;--navy3:#0d2137;
+  --blue:#3b82f6;--blue2:#2563eb;
+  --bg:#ffffff;--bg2:#f8fafc;--bg3:#f1f5f9;--bg4:#e2e8f0;--bg5:#cbd5e1;
+  --border:#e2e8f0;--border2:#cbd5e1;--border3:#94a3b8;
+  --text:#0f172a;--text2:#475569;--text3:#94a3b8;
+  --green:#10b981;--red:#ef4444;--amber:#f59e0b;--purple:#8b5cf6;--pink:#ec4899;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --sh2:0 4px 8px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.04);
+  --sh3:0 12px 24px rgba(0,0,0,.08),0 4px 8px rgba(0,0,0,.04);
+  --nav-h:60px;--sb-w:228px;--r:8px;--rlg:12px;--rxl:16px;
+  --font:'Inter',sans-serif;--mono:'DM Mono',monospace;--serif:'Playfair Display',serif;
+}
+html{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;scroll-behavior:smooth}
+body{min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg3)}
+::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:var(--border3)}
+
+/* ── NAV ── */
+.nav{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--nav-h);background:var(--navy3);border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:12px;padding:0 16px}
+.logo{font-family:var(--serif);font-size:19px;font-weight:400;color:#fff;letter-spacing:-.02em;display:flex;align-items:center;gap:9px;flex-shrink:0;cursor:pointer;text-decoration:none}
+.logo-mark{width:30px;height:30px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.search-wrap{flex:1;max-width:600px;display:flex;align-items:center;background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.14);border-radius:10px;overflow:hidden;transition:border-color .2s,background .2s,box-shadow .2s}
+.search-wrap:focus-within{background:rgba(255,255,255,0.14);border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,0.2)}
+.search-ico{padding:0 10px 0 14px;color:rgba(255,255,255,0.45);font-size:16px;flex-shrink:0}
+.search-input{flex:1;background:none;border:none;outline:none;color:#fff;font:14px/1 var(--font);padding:11px 4px}
+.search-input::placeholder{color:rgba(255,255,255,0.38)}
+.search-btn{background:var(--blue);border:none;cursor:pointer;padding:8px 18px;margin:4px;border-radius:7px;font:13px/1 var(--font);font-weight:600;color:#fff;transition:background .15s,transform .1s;flex-shrink:0}
+.search-btn:hover{background:var(--blue2)}
+.search-btn:active{transform:scale(0.97)}
+.search-btn:disabled{opacity:.45;cursor:not-allowed}
+.nav-right{display:flex;gap:6px;margin-left:auto;flex-shrink:0;align-items:center}
+.nav-btn{height:34px;padding:0 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.75);font:12px/1 var(--font);cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s;white-space:nowrap}
+.nav-btn:hover{background:rgba(255,255,255,0.14);color:#fff}
+.nav-btn.nb-save.saved{background:rgba(59,130,246,0.3);color:#93c5fd;border-color:rgba(59,130,246,0.4)}
+.nav-btn.nb-keys{background:var(--blue);border-color:var(--blue);color:#fff}
+.nav-btn.nb-keys:hover{background:var(--blue2)}
+
+/* ── LAYOUT ── */
+.page{padding-top:var(--nav-h);display:flex;min-height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sb-w);flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);padding:16px 12px;position:sticky;top:var(--nav-h);height:calc(100vh - var(--nav-h));overflow-y:auto;display:flex;flex-direction:column;gap:18px}
+.sb-sec{}
+.sb-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--text3);text-transform:uppercase;margin-bottom:8px;padding:0 4px;display:flex;align-items:center;justify-content:space-between}
+.sb-lbl-act{font-family:var(--font);text-transform:none;letter-spacing:0;cursor:pointer;color:var(--text3);font-size:11px}
+.sb-lbl-act:hover{color:var(--red)}
+.q-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.q-chip{padding:5px 6px;border-radius:7px;border:1px solid var(--border);background:var(--bg);font-size:11px;color:var(--text2);cursor:pointer;text-align:center;transition:all .15s;user-select:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.q-chip:hover{border-color:var(--navy);color:var(--navy);background:rgba(30,58,95,0.06)}
+.q-chip.on{border-color:var(--navy);color:var(--navy);background:rgba(30,58,95,0.08);font-weight:500}
+.sb-btn{display:flex;align-items:center;gap:7px;width:100%;padding:7px 8px;border-radius:7px;border:1px solid transparent;background:none;cursor:pointer;color:var(--text2);font:13px/1.2 var(--font);text-align:left;transition:all .12s;margin-bottom:1px}
+.sb-btn:hover{background:var(--bg3);color:var(--text)}
+.sb-btn.on{background:rgba(30,58,95,0.08);color:var(--navy);border-color:rgba(30,58,95,0.12);font-weight:500}
+.h-item{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:7px;cursor:pointer;transition:background .12s;font-size:12px;color:var(--text2)}
+.h-item:hover{background:var(--bg3);color:var(--text)}
+.h-time{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--text3)}
+.h-empty{font-size:12px;color:var(--text3);padding:4px 8px;font-style:italic}
+.saved-item{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:7px;cursor:pointer;transition:background .12s;font-size:12px;color:var(--text2)}
+.saved-item:hover{background:var(--bg3);color:var(--navy)}
+
+/* ── MAIN ── */
+.main{flex:1;min-width:0;padding:22px 22px 50px}
+
+/* ── HERO ── */
+.hero{text-align:center;padding:60px 20px 48px;display:flex;flex-direction:column;align-items:center;gap:18px}
+.hero-pill{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--navy);text-transform:uppercase;background:rgba(30,58,95,0.07);padding:5px 14px;border-radius:20px;border:1px solid rgba(30,58,95,0.12)}
+.hero-h{font-family:var(--serif);font-size:44px;font-weight:400;color:var(--text);letter-spacing:-.025em;line-height:1.12}
+.hero-h em{color:var(--navy);font-style:normal}
+.hero-sub{font-size:15px;color:var(--text2);max-width:500px;line-height:1.7}
+.hero-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:6px}
+.h-chip{padding:7px 15px;border-radius:24px;border:1px solid var(--border2);background:var(--bg);font-size:13px;color:var(--text2);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;box-shadow:var(--sh)}
+.h-chip:hover{border-color:var(--navy);color:var(--navy);background:rgba(30,58,95,0.05);box-shadow:var(--sh2)}
+
+/* ── RESULTS HEADER ── */
+.res-hdr{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.res-kw{font-family:var(--serif);font-size:26px;font-weight:400;color:var(--text)}
+.res-badge{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:6px;background:rgba(30,58,95,0.08);border:1px solid rgba(30,58,95,0.12);color:var(--navy)}
+.res-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.res-select{background:var(--bg);border:1px solid var(--border2);color:var(--text);font:12px/1 var(--font);padding:6px 10px;border-radius:7px;cursor:pointer;outline:none}
+.res-select:focus{border-color:var(--navy)}
+.icon-btn{width:32px;height:32px;border-radius:7px;border:1px solid var(--border2);background:var(--bg);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s}
+.icon-btn:hover{border-color:var(--navy);color:var(--navy);background:rgba(30,58,95,0.06)}
+
+/* ── FILTER BAR ── */
+.filter-bar{display:flex;gap:6px;align-items:center;margin-bottom:14px;flex-wrap:wrap;padding:11px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rlg)}
+.fl{font-size:11px;color:var(--text3);font-weight:500;white-space:nowrap}
+.fsep{width:1px;height:18px;background:var(--border2);margin:0 4px;flex-shrink:0}
+.fc{padding:5px 11px;border-radius:20px;border:1px solid var(--border);background:var(--bg);font-size:12px;color:var(--text2);cursor:pointer;transition:all .15s;flex-shrink:0;user-select:none}
+.fc:hover{border-color:var(--navy);color:var(--navy)}
+.fc.on{border-color:var(--navy);color:var(--navy);background:rgba(30,58,95,0.07);font-weight:500}
+.fc.src.on{border-color:var(--green);color:#059669;background:rgba(16,185,129,0.07)}
+.cat-bar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:16px}
+
+/* ── COHORT CARDS ── */
+.cohorts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:10px;margin-bottom:24px}
+.c-card{border-radius:var(--rlg);border:1px solid var(--border);background:var(--bg);padding:15px;cursor:pointer;transition:transform .18s,border-color .2s,box-shadow .2s;animation:fadeup .3s both;position:relative;box-shadow:var(--sh)}
+@keyframes fadeup{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.c-card:hover{transform:translateY(-2px);border-color:var(--navy);box-shadow:var(--sh2)}
+.c-card.active{border-color:var(--navy);background:rgba(30,58,95,0.025);box-shadow:0 0 0 2px rgba(30,58,95,0.12)}
+.c-top{display:flex;align-items:flex-start;gap:9px;margin-bottom:10px}
+.c-rank{font-family:var(--mono);font-size:12px;color:var(--navy);font-weight:500;background:rgba(30,58,95,0.08);border:1px solid rgba(30,58,95,0.12);min-width:28px;height:28px;border-radius:7px;padding:0 5px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.c-rank.gold{background:var(--navy);color:#fff;border-color:var(--navy)}
+.c-title{font-size:14px;font-weight:500;color:var(--text);line-height:1.3;flex:1}
+.c-trend{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:20px;flex-shrink:0;margin-left:auto}
+.tr-hot{background:rgba(239,68,68,.09);color:#b91c1c;border:1px solid rgba(239,68,68,.18)}
+.tr-up{background:rgba(245,158,11,.09);color:#b45309;border:1px solid rgba(245,158,11,.18)}
+.tr-ok{background:var(--bg3);color:var(--text3);border:1px solid var(--border)}
+.c-desc{font-size:12px;color:var(--text2);line-height:1.55;margin-bottom:10px}
+.c-meta{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.c-shot{font-size:11px;padding:2px 8px;border-radius:5px;background:var(--bg3);color:var(--text3);border:1px solid var(--border)}
+.c-cat-badge{font-size:10px;padding:2px 7px;border-radius:5px;font-weight:500}
+.cat-culture{background:rgba(139,92,246,.09);color:#6d28d9;border:1px solid rgba(139,92,246,.18)}
+.cat-nature{background:rgba(16,185,129,.09);color:#059669;border:1px solid rgba(16,185,129,.18)}
+.cat-food{background:rgba(245,158,11,.09);color:#b45309;border:1px solid rgba(245,158,11,.18)}
+.cat-lifestyle{background:rgba(236,72,153,.09);color:#be185d;border:1px solid rgba(236,72,153,.18)}
+.cat-adventure{background:rgba(239,68,68,.09);color:#b91c1c;border:1px solid rgba(239,68,68,.18)}
+.cat-city{background:rgba(59,130,246,.09);color:#1d4ed8;border:1px solid rgba(59,130,246,.18)}
+.cat-luxury{background:rgba(245,158,11,.09);color:#92400e;border:1px solid rgba(245,158,11,.18)}
+.cat-spiritual{background:rgba(139,92,246,.09);color:#5b21b6;border:1px solid rgba(139,92,246,.18)}
+.c-foot{display:flex;align-items:center}
+.c-vol{font-family:var(--mono);font-size:10px;color:var(--text3)}
+.c-go{margin-left:auto;font-size:11px;padding:5px 12px;border-radius:6px;background:var(--navy);color:#fff;border:none;cursor:pointer;font-weight:500;transition:background .12s;opacity:0}
+.c-card:hover .c-go,.c-card.active .c-go{opacity:1}
+.c-go:hover{background:var(--navy2)}
+.skel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:10px}
+.sk-card{border-radius:var(--rlg);border:1px solid var(--border);background:var(--bg);padding:15px;animation:shim 1.4s infinite}
+.sk-line{height:10px;background:var(--bg3);border-radius:5px;margin-bottom:9px}
+.sk-line.s60{width:60%}.sk-line.s40{width:40%}
+.sk-box{height:44px;background:var(--bg3);border-radius:7px;margin-bottom:10px}
+@keyframes shim{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* ── MEDIA PANEL ── */
+.m-panel{margin-top:6px;padding:16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rxl);margin-bottom:24px}
+.mp-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.mp-title{font-size:15px;font-weight:500;color:var(--navy)}
+.mp-sub{font-size:12px;color:var(--text3)}
+.mp-close{margin-left:auto;width:28px;height:28px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .12s}
+.mp-close:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.mp-filters{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.mpf{padding:4px 10px;border-radius:16px;border:1px solid var(--border);background:var(--bg);font-size:11px;color:var(--text3);cursor:pointer;transition:all .15s;user-select:none}
+.mpf:hover{border-color:var(--navy);color:var(--navy)}
+.mpf.on{border-color:var(--navy);color:var(--navy);background:rgba(30,58,95,0.07);font-weight:500}
+.mpf.src-f.on{border-color:var(--green);color:#059669;background:rgba(16,185,129,0.07)}
+.masonry{columns:4 175px;column-gap:8px}
+.m-card{break-inside:avoid;margin-bottom:8px;border-radius:var(--rlg);overflow:hidden;border:1px solid var(--border);background:var(--bg);cursor:pointer;position:relative;transition:transform .18s,border-color .2s,box-shadow .2s;animation:fadeup .35s both;box-shadow:var(--sh)}
+.m-card:hover{transform:translateY(-2px);border-color:var(--navy);box-shadow:var(--sh2)}
+.m-thumb{width:100%;display:block;background:var(--bg3);object-fit:cover;min-height:80px}
+.m-vbadge{position:absolute;top:7px;left:7px;background:rgba(15,23,42,.65);backdrop-filter:blur(8px);border-radius:5px;padding:2px 7px;font-family:var(--mono);font-size:10px;color:#fff;display:flex;align-items:center;gap:4px}
+.play-tri{width:0;height:0;border-style:solid;border-width:3px 0 3px 6px;border-color:transparent transparent transparent #fff}
+.m-score{position:absolute;top:7px;right:7px;border-radius:5px;padding:2px 8px;font-family:var(--mono);font-size:10px;font-weight:600}
+.s-hi{background:rgba(16,185,129,.88);color:#fff}
+.s-md{background:rgba(245,158,11,.88);color:#fff}
+.s-lo{background:rgba(100,116,139,.8);color:#fff}
+.m-actions{position:absolute;bottom:0;left:0;right:0;padding:7px;background:linear-gradient(to top,rgba(15,23,42,.75) 0%,transparent);display:flex;gap:5px;justify-content:flex-end;opacity:0;transition:opacity .15s}
+.m-card:hover .m-actions{opacity:1}
+.m-act{width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;transition:background .12s;text-decoration:none}
+.m-act:hover{background:rgba(30,58,95,.8)}
+.m-body{padding:8px 10px 10px}
+.m-ttl{font-size:11px;color:var(--text);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:6px}
+.m-meta{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.m-src{font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:4px;border:1px solid var(--border);color:var(--text3);background:var(--bg3)}
+.m-lic{font-size:10px;padding:2px 6px;border-radius:4px}
+.lic-ok{background:rgba(16,185,129,.09);color:#059669;border:1px solid rgba(16,185,129,.18)}
+.lic-at{background:rgba(245,158,11,.09);color:#b45309;border:1px solid rgba(245,158,11,.18)}
+.m-res{font-family:var(--mono);font-size:10px;color:var(--text3);margin-left:auto}
+.m-dur{font-family:var(--mono);font-size:10px;color:var(--text3)}
+.m-skels{columns:4 175px;column-gap:8px}
+.msk{break-inside:avoid;margin-bottom:8px;border-radius:var(--rlg);background:var(--bg3);border:1px solid var(--border);animation:shim 1.3s infinite}
+.msk-i{background:var(--bg4)}
+.load-more{display:block;width:100%;margin-top:12px;padding:11px;border-radius:var(--rlg);border:1px solid var(--border);background:var(--bg);color:var(--text2);font:13px/1 var(--font);cursor:pointer;transition:all .15s;text-align:center}
+.load-more:hover{border-color:var(--navy);color:var(--navy);background:rgba(30,58,95,0.04)}
+.no-media{padding:28px;text-align:center;color:var(--text3);font-size:13px}
+
+/* ── AI LOADING ── */
+.ai-gen{display:flex;flex-direction:column;align-items:center;gap:16px;padding:70px 20px;text-align:center}
+.ai-spin{width:44px;height:44px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--navy);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ai-h{font-family:var(--serif);font-size:24px;color:var(--text);font-weight:400}
+.ai-s{font-size:13px;color:var(--text2);line-height:1.65;max-width:380px}
+.ai-steps{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap;justify-content:center}
+.ai-step{font-family:var(--mono);font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid var(--border);color:var(--text3);background:var(--bg2)}
+.ai-step.done{border-color:var(--green);color:#059669;background:rgba(16,185,129,.07)}
+.ai-step.go{border-color:var(--navy);color:var(--navy);background:rgba(30,58,95,.07);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(10px);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-bg.open{opacity:1;pointer-events:all}
+.modal{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:28px;width:92%;max-width:460px;max-height:90vh;overflow-y:auto;box-shadow:var(--sh3)}
+.mhdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.m-title{font-family:var(--serif);font-size:22px;font-weight:400;color:var(--text)}
+.m-close{width:30px;height:30px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);cursor:pointer;color:var(--text2);font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .12s}
+.m-close:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.m-sub{font-size:13px;color:var(--text3);line-height:1.6;margin-bottom:20px}
+.m-field{margin-bottom:15px}
+.m-lbl{font-size:12px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:8px;font-weight:500}
+.m-lbl a{color:var(--navy);font-size:11px;font-weight:400}
+.m-inp{width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:9px;padding:9px 12px;color:var(--text);font:13px/1 var(--mono);outline:none;transition:border-color .15s,box-shadow .15s}
+.m-inp:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,58,95,.08)}
+.m-inp.sv{border-color:var(--green)}
+.m-note{font-size:11px;color:var(--text3);margin-top:5px;line-height:1.5}
+.m-save{width:100%;margin-top:6px;padding:12px;border-radius:10px;background:var(--navy);border:none;cursor:pointer;font:14px/1 var(--font);font-weight:600;color:#fff;transition:background .15s}
+.m-save:hover{background:var(--navy2)}
+.ks{padding:10px 14px;border-radius:9px;font-size:12px;line-height:1.6;margin-bottom:16px}
+.ks-good{background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.18);color:#059669}
+.ks-warn{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.18);color:#b45309}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy3);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 18px;font-size:13px;color:#fff;z-index:700;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;box-shadow:var(--sh3)}
+.toast.show{opacity:1}
+
+@media(max-width:768px){.sidebar{display:none}.masonry{columns:2 140px}.cohorts-grid,.skel-grid{grid-template-columns:1fr 1fr}.hero-h{font-size:28px}.m-skels{columns:2 140px}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="logo" onclick="goHome()"><div class="logo-mark">🎬</div>ReelBot</div>
+  <div class="search-wrap">
+    <span class="search-ico">⌕</span>
+    <input class="search-input" id="q" type="text" placeholder="Search any country, city, or topic — Bali, Tokyo, Street Food, Sunset…" autocomplete="off">
+    <button class="search-btn" id="searchBtn" onclick="doSearch()">Search →</button>
+  </div>
+  <div class="nav-right">
+    <button class="nav-btn nb-save" id="saveBtn" onclick="toggleSave()">⊕ Save</button>
+    <button class="nav-btn nb-keys" onclick="openModal()">🔑 API Keys</button>
+  </div>
+</nav>
+
+<div class="page">
+  <aside class="sidebar">
+    <div class="sb-sec">
+      <div class="sb-lbl">Quick Search</div>
+      <div class="q-grid" id="quickGrid"></div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-lbl">Region</div>
+      <div id="regionBtns"></div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-lbl">Category</div>
+      <div id="catBtns"></div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-lbl">Recent Searches <span class="sb-lbl-act" onclick="clearHistory()">Clear</span></div>
+      <div id="historyList"></div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-lbl">Saved <span class="sb-lbl-act" onclick="clearSaved()">Clear</span></div>
+      <div id="savedList"></div>
+    </div>
+  </aside>
+  <main class="main" id="mainArea">
+    <div class="hero" id="hero">
+      <div class="hero-pill">Visual Trend Discovery Engine</div>
+      <div class="hero-h">Top 30 shot cohorts for<br><em>every destination on earth</em></div>
+      <div class="hero-sub">Type any place, topic, or vibe. ReelBot generates 30 unique visual cohorts ranked by content volume — then finds matching free-to-use media instantly.</div>
+      <div class="hero-chips" id="heroChips"></div>
+    </div>
+    <div id="resultsArea"></div>
+  </main>
+</div>
+
+<div class="modal-bg" id="modalBg" onclick="handleBgClick(event)">
+  <div class="modal">
+    <div class="mhdr"><div class="m-title">API Keys</div><button class="m-close" onclick="closeModal()">✕</button></div>
+    <div class="m-sub">Keys are stored only in your browser — never sent anywhere except the API itself.</div>
+    <div id="keysStatus"></div>
+    <div class="m-field">
+      <div class="m-lbl">Pexels <a href="https://www.pexels.com/api/" target="_blank">→ Get free key</a></div>
+      <input class="m-inp" id="k_pexels" type="password" placeholder="Paste Pexels key…">
+      <div class="m-note">Free · 200 req/hr · Photos + Videos</div>
+    </div>
+    <div class="m-field">
+      <div class="m-lbl">Pixabay <a href="https://pixabay.com/api/docs/" target="_blank">→ Get free key</a></div>
+      <input class="m-inp" id="k_pixabay" type="password" placeholder="Paste Pixabay key…">
+      <div class="m-note">Free · 100 req/min · Photos + Videos</div>
+    </div>
+    <div class="m-field">
+      <div class="m-lbl">Unsplash <a href="https://unsplash.com/developers" target="_blank">→ Get free key</a></div>
+      <input class="m-inp" id="k_unsplash" type="password" placeholder="Paste Unsplash key…">
+      <div class="m-note">Free · 50 req/hr · High-quality photos</div>
+    </div>
+    <div class="m-field">
+      <div class="m-lbl">Anthropic (AI cohort generation) <a href="https://console.anthropic.com/" target="_blank">→ Get key</a></div>
+      <input class="m-inp" id="k_anthropic" type="password" placeholder="sk-ant-…">
+      <div class="m-note">Optional · Generates 30 unique cohorts for any keyword. Without this, smart fallback templates are used.</div>
+    </div>
+    <button class="m-save" onclick="saveKeys()">Save API Keys ✓</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  PRE-LOADED DATABASE  (21 destinations × 15-20 cohorts)
+// ════════════════════════════════════════════════════════════
+const DB = {
+"bali":[
+  {t:"Tirta Empul Purification",v:"Devotees submerging in sacred spring water at Bali's holiest water temple",shot:"Low angle slow-mo",vibe:"Spiritual, cinematic",cat:"spiritual",q:"Tirta Empul temple Bali water"},
+  {t:"Tegallalang Rice Terraces",v:"Cascading emerald paddies carved into the hillside at golden hour",shot:"Wide drone pull-back",vibe:"Epic, serene",cat:"nature",q:"Tegallalang rice terrace Bali aerial"},
+  {t:"Uluwatu Cliff Sunset",v:"Silhouette of temple on 70m clifftop above crashing waves",shot:"Golden hour wide",vibe:"Dramatic, moody",cat:"culture",q:"Uluwatu temple cliff sunset Bali"},
+  {t:"Kecak Fire Dance",v:"Balinese performers in trance around a fire during ritual ceremony",shot:"Close-up faces",vibe:"Raw, cultural",cat:"culture",q:"Kecak fire dance Bali ceremony"},
+  {t:"Campuhan Ridge Morning",v:"Misty ridge path through lush jungle toward Ubud just after sunrise",shot:"Slow tracking",vibe:"Peaceful, dreamy",cat:"nature",q:"Campuhan Ridge Walk Ubud Bali morning"},
+  {t:"Floating Breakfast Pool",v:"Colourful fruit platters floating on private pool with jungle valley below",shot:"Overhead flat lay",vibe:"Luxury, aspirational",cat:"luxury",q:"Bali floating breakfast infinity pool"},
+  {t:"Pura Besakih Volcano",v:"Mother Temple with Mount Agung visible through incense smoke",shot:"Long lens compression",vibe:"Mystical, powerful",cat:"spiritual",q:"Pura Besakih temple Mount Agung volcano"},
+  {t:"Ubud Morning Market",v:"Vendors in traditional dress selling marigold offerings before dawn",shot:"Street level",vibe:"Authentic, colourful",cat:"culture",q:"Ubud morning market Bali vendors"},
+  {t:"Hidden Munduk Waterfall",v:"Secret waterfall deep in Munduk forest along a muddy jungle trail",shot:"Reveal walk",vibe:"Adventure, raw",cat:"adventure",q:"Munduk waterfall Bali jungle"},
+  {t:"Seminyak Sunset Bar",v:"Bamboo beach club, cocktails glowing against a blazing orange sky",shot:"Silhouette wide",vibe:"Social, warm",cat:"lifestyle",q:"Seminyak beach bar sunset Bali"},
+  {t:"Canang Sari Offerings",v:"Intricate daily baskets of flowers, incense, and rice on temple steps",shot:"Macro close-up",vibe:"Intimate, detail",cat:"spiritual",q:"Canang sari flower offering Bali"},
+  {t:"Luxury Clifftop Villa",v:"Aerial reveal of villa pools cascading down Uluwatu headland",shot:"Drone overhead",vibe:"Aspirational, luxury",cat:"luxury",q:"Bali luxury clifftop villa aerial"},
+  {t:"Sekumpul Waterfall",v:"Seven-stream waterfall system in North Bali's most dramatic jungle",shot:"Wide misty reveal",vibe:"Epic, wild",cat:"adventure",q:"Sekumpul waterfall Bali"},
+  {t:"Tanah Lot at High Tide",v:"Ancient sea temple surrounded by foaming ocean, pink sky behind",shot:"Long exposure",vibe:"Timeless, iconic",cat:"culture",q:"Tanah Lot temple ocean Bali sunset"},
+  {t:"Mount Batur Sunrise Hike",v:"Silhouettes reaching the crater rim as the sun rises over the sea",shot:"Sunrise wide",vibe:"Achievement, epic",cat:"adventure",q:"Mount Batur sunrise hike Bali volcano"},
+  {t:"Kelingking Sea Cliff",v:"Nusa Penida T-Rex cliff — turquoise cove far below in full frame",shot:"Drone hover",vibe:"Jaw-dropping, iconic",cat:"nature",q:"Kelingking Beach Nusa Penida cliff"},
+  {t:"Manta Ray Snorkelling",v:"Freediver hovering above massive manta ray in crystal-clear blue water",shot:"Underwater wide",vibe:"Surreal, wild",cat:"adventure",q:"manta ray snorkelling Nusa Penida underwater"},
+  {t:"Jimbaran Seafood Dusk",v:"Tables on the sand, lanterns lit, grilled fish as waves lap nearby",shot:"Golden wide",vibe:"Romantic, warm",cat:"food",q:"Jimbaran beach seafood dinner Bali"},
+],
+"tokyo":[
+  {t:"Shibuya Crossing Rush Hour",v:"500 people crossing simultaneously under giant neon screens",shot:"High angle overhead",vibe:"Energetic, iconic",cat:"city",q:"Shibuya crossing Tokyo rush hour aerial"},
+  {t:"Senso-ji at Dawn",v:"Nakamise street empty and misty before sunrise, lanterns glowing",shot:"Wide fog walk",vibe:"Peaceful, ancient",cat:"culture",q:"Senso-ji temple dawn morning Tokyo"},
+  {t:"Shinjuku Neon Rain",v:"Reflections of neon signs on wet cobblestones at midnight",shot:"Low angle rain",vibe:"Moody, cinematic",cat:"city",q:"Shinjuku neon night rain Tokyo"},
+  {t:"Tsukiji Market 5am",v:"Tuna auction prep — chefs and fishmongers in rubber boots moving fast",shot:"Handheld fast",vibe:"Raw, authentic",cat:"food",q:"Tsukiji market Tokyo tuna fish"},
+  {t:"Cherry Blossom Ueno",v:"Canopy of pale pink sakura above picnic blankets along Shinobazu Pond",shot:"Look-up wide",vibe:"Dreamlike, seasonal",cat:"nature",q:"cherry blossom sakura Tokyo park"},
+  {t:"Ramen Steam Close-Up",v:"Tonkotsu ramen steam rising, chopsticks lifting first noodle",shot:"Macro steam",vibe:"Satisfying, foodie",cat:"food",q:"ramen bowl Tokyo close up steam"},
+  {t:"Shinkansen with Fuji",v:"Bullet train blurring past with Mount Fuji crystal clear behind",shot:"Panning 1/60s",vibe:"Speed, precision",cat:"city",q:"Shinkansen bullet train Mount Fuji"},
+  {t:"Harajuku Takeshita Street",v:"Teenage fashion tribes in extreme outfits outside Daiso on Sunday",shot:"Street portrait",vibe:"Playful, colour",cat:"lifestyle",q:"Harajuku street fashion Tokyo"},
+  {t:"Teamlab Planets",v:"People in ankle-deep water reflecting infinite mirrored flowers",shot:"Wide reflection",vibe:"Surreal, digital",cat:"lifestyle",q:"teamlab planets digital art Tokyo"},
+  {t:"Golden Gai Night",v:"Six tiny alleyways of 200 ramshackle bars near Shinjuku station",shot:"Narrow alley",vibe:"Secret, atmospheric",cat:"city",q:"Golden Gai Shinjuku Tokyo alley bar"},
+  {t:"Meiji Jingu Forest",v:"100-year-old forested walk to shrine — complete silence in city centre",shot:"Forest tracking",vibe:"Meditative, contrast",cat:"nature",q:"Meiji Jingu shrine forest path Tokyo"},
+  {t:"Akihabara Electronics",v:"Seven-storey stores, manga cafes, maids handing out flyers",shot:"Tilt-up vertical",vibe:"Overwhelming, bright",cat:"city",q:"Akihabara electronics Tokyo night"},
+  {t:"Sumo Morning Practice",v:"Wrestler training at 7am — slaps echoing in the silent dojo",shot:"Low side angle",vibe:"Ancient, powerful",cat:"culture",q:"sumo practice morning Tokyo stable"},
+  {t:"Convenience Store 2am",v:"Salaryman reheating onigiri alone under fluorescent lights",shot:"Long lens street",vibe:"Lonely, honest",cat:"lifestyle",q:"convenience store konbini Japan night"},
+  {t:"Mount Fuji Sunrise",v:"Perfect cone of Fuji at dawn reflected in Kawaguchiko lake",shot:"Wide reflection",vibe:"Iconic, serene",cat:"nature",q:"Mount Fuji sunrise reflection lake Japan"},
+],
+"paris":[
+  {t:"Eiffel Tower Sparkle",v:"Tower glitters with 20,000 lights at top of each hour at night",shot:"Wide slow exposure",vibe:"Romantic, iconic",cat:"city",q:"Eiffel Tower sparkle light show night Paris"},
+  {t:"Montmartre Sunrise",v:"Artist at easel as pink light floods the cobblestones below",shot:"Wide street",vibe:"Artistic, warm",cat:"lifestyle",q:"Montmartre Paris sunrise cobblestone street"},
+  {t:"Boulangerie at 5am",v:"Baker sliding golden croissants from the oven, steam filling room",shot:"Kitchen close-up",vibe:"Artisanal, warm",cat:"food",q:"Paris boulangerie bakery croissants oven"},
+  {t:"Seine Bateau Mouche",v:"View from river boat of Notre-Dame at golden hour",shot:"Moving wide",vibe:"Classic, dreamy",cat:"culture",q:"Seine river boat Paris Notre Dame golden hour"},
+  {t:"Café de Flore Morning",v:"Espresso, croissant, Le Monde on marble table on the terrace",shot:"Overhead flat lay",vibe:"Sophisticated, slow",cat:"lifestyle",q:"Café de Flore Paris terrace morning"},
+  {t:"Palais Royal Garden",v:"Symmetrical colonnades with Buren columns — fashion editorial",shot:"Symmetry tracking",vibe:"Elegant, architectural",cat:"city",q:"Palais Royal Paris gardens columns"},
+  {t:"Ladurée Macarons",v:"Pastel macaron tower in legendary green-lacquer shop windows",shot:"Slow pan macro",vibe:"Luxurious, colour",cat:"food",q:"Ladurée macarons Paris pastry shop"},
+  {t:"Lafayette Cupola",v:"Looking straight up at Art Nouveau stained-glass dome from below",shot:"Overhead tilt-up",vibe:"Grand, architectural",cat:"city",q:"Galeries Lafayette Paris dome interior"},
+  {t:"Canal Saint-Martin",v:"Narrowboats through iron swing bridges under plane tree canopy",shot:"Time-lapse lock",vibe:"Relaxed, local",cat:"city",q:"Canal Saint-Martin Paris boats lock"},
+  {t:"Père Lachaise Fog",v:"Overgrown ivy-covered headstones on a misty autumn morning",shot:"Wide misty walk",vibe:"Melancholic, beautiful",cat:"nature",q:"Père Lachaise cemetery Paris fog"},
+  {t:"Rue Crémieux Houses",v:"The most Instagrammed street — colourful painted facades in the 12th",shot:"Full street wide",vibe:"Colourful, pop",cat:"city",q:"Rue Crémieux Paris colourful houses"},
+  {t:"Fashion Week Street Style",v:"Editors outside Grand Palais in impossible outfits between shows",shot:"Street portrait",vibe:"Fashion, electric",cat:"lifestyle",q:"Paris Fashion Week street style outside"},
+  {t:"Versailles Mirrors at Dawn",v:"Hall of Mirrors empty at dawn — 357 mirrors reflecting silence",shot:"Tracking wide",vibe:"Grand, historical",cat:"culture",q:"Versailles Hall of Mirrors Paris"},
+  {t:"Pastry Chef Close-Up",v:"Chef placing gold leaf on tarte Tatin with tweezers in slow-mo",shot:"Extreme macro",vibe:"Precision, art",cat:"food",q:"Paris pastry chef tarte creation close up"},
+  {t:"Rooftop with Sacré-Cœur",v:"Wine glasses on terrace with Sacré-Cœur glowing at dusk",shot:"Rooftop wide",vibe:"Romantic, elevated",cat:"lifestyle",q:"Paris rooftop Sacré-Cœur sunset view"},
+],
+"dubai":[
+  {t:"Burj Khalifa Base Look-Up",v:"Standing at base of world's tallest building — 830m disappearing into haze",shot:"Tilt-up wide",vibe:"Awe, power",cat:"city",q:"Burj Khalifa base looking up Dubai"},
+  {t:"Desert Dune at Sunrise",v:"Lone figure on caramel dune crest as first light hits the sand",shot:"Silhouette",vibe:"Epic, solitary",cat:"nature",q:"Dubai desert dunes sunrise silhouette"},
+  {t:"Gold Souk Alley",v:"Narrow alley of gold jewellery shops glittering under tungsten light",shot:"Narrow perspective",vibe:"Rich, ancient",cat:"culture",q:"Dubai Gold Souk Creek jewellery alley"},
+  {t:"Burj Al Arab Pool",v:"Helicopter view of pool cantilevered over the Arabian Gulf",shot:"Drone diagonal",vibe:"Luxury, jaw-drop",cat:"luxury",q:"Burj Al Arab infinity pool Dubai aerial"},
+  {t:"Deira Spice Market",v:"Sacks of saffron, cardamom, and dried roses across the souk floor",shot:"Overhead macro",vibe:"Aromatic, vibrant",cat:"culture",q:"Deira spice market Dubai sacks colourful"},
+  {t:"Dubai Frame Sunset",v:"150m golden picture frame framing old and new Dubai simultaneously",shot:"Far wide sunset",vibe:"Symbolic, stunning",cat:"city",q:"Dubai Frame sunset golden"},
+  {t:"Supercar Row",v:"Sheikh Zayed Road at 3am with Lamborghinis doing burnouts",shot:"Low wide tracking",vibe:"Excess, speed",cat:"lifestyle",q:"Dubai supercar Sheikh Zayed Road night"},
+  {t:"Palm Jumeirah Aerial",v:"Drone above the palm island frond showing its perfect geometry",shot:"Straight-down drone",vibe:"Iconic, geometric",cat:"city",q:"Palm Jumeirah aerial Dubai drone"},
+  {t:"Old Dubai Abra Crossing",v:"Traditional water taxi crossing Dubai Creek at dusk past dhows",shot:"Wide from dock",vibe:"Timeless, contrast",cat:"culture",q:"Dubai Creek abra boat crossing traditional"},
+  {t:"Museum of the Future",v:"Arabesque metalwork facade glowing gold from inside",shot:"Interior wide",vibe:"Futuristic, architectural",cat:"city",q:"Museum of the Future Dubai interior"},
+  {t:"Dubai Fountain Show",v:"825m water jets dancing to music in front of Burj Khalifa at night",shot:"Wide fountain",vibe:"Grand, spectacular",cat:"city",q:"Dubai Fountain Burj Khalifa show night"},
+  {t:"Al Fahidi Wind Towers",v:"Traditional wind-tower houses in Al Fahidi neighbourhood at blue hour",shot:"Low wide blue",vibe:"Authentic, historical",cat:"culture",q:"Al Fahidi Bastakiya wind tower Dubai"},
+  {t:"Desert Falcon Release",v:"Falconer releasing hooded falcon into desert sky at golden sunset",shot:"Slow-mo release",vibe:"Cultural, majestic",cat:"culture",q:"Dubai desert falcon falconry sunset"},
+  {t:"Hatta Mountain Kayak",v:"Kayaking turquoise waters between terracotta mountains near Hatta",shot:"Low water level",vibe:"Adventure, surreal",cat:"adventure",q:"Hatta dam kayaking mountains Dubai"},
+  {t:"JBR Beach Night Walk",v:"Promenade with Ferris wheel and 100 restaurants lit along the shore",shot:"Wide walk",vibe:"Fun, social",cat:"lifestyle",q:"JBR beach walk Dubai night promenade"},
+],
+"newyork":[
+  {t:"Times Square 3am Empty",v:"Times Square completely empty at 3am — ads blazing to no one",shot:"Wide street",vibe:"Surreal, iconic",cat:"city",q:"Times Square New York empty night 3am"},
+  {t:"Brooklyn Bridge at Dawn",v:"Pedestrian walkway with Manhattan skyline in pink morning mist",shot:"Wide fog walk",vibe:"Iconic, inspiring",cat:"city",q:"Brooklyn Bridge walk dawn sunrise Manhattan"},
+  {t:"Central Park Snow",v:"First snowfall — Bethesda Fountain frozen, lone jogger in red jacket",shot:"Wide falling snow",vibe:"Serene, magical",cat:"nature",q:"Central Park New York snow winter Bethesda"},
+  {t:"High Line Sunset",v:"Elevated park among skyscrapers — wildflowers and rusty tracks",shot:"Wide tracking",vibe:"Urban nature, warm",cat:"city",q:"High Line New York sunset walk elevated park"},
+  {t:"Steam Rising Manholes",v:"Yellow taxis and steam vents creating a cinematic scene on 5th Ave",shot:"Low angle fog",vibe:"Atmospheric, cinematic",cat:"city",q:"New York steam manhole yellow taxi street"},
+  {t:"Katz's Deli Pastrami",v:"Counter man carving a towering pastrami sandwich at the oldest deli",shot:"Medium close",vibe:"Authentic, legendary",cat:"food",q:"Katz's Deli New York pastrami sandwich"},
+  {t:"Empire State View",v:"Looking down from the 86th floor at the Manhattan grid below",shot:"Drone-like wide",vibe:"Vertiginous, epic",cat:"city",q:"Empire State Building observation deck view New York"},
+  {t:"Brooklyn Rooftop Party",v:"Rooftop bar with Manhattan skyline — golden hour drinks",shot:"Wide sunset",vibe:"Aspirational, social",cat:"lifestyle",q:"Brooklyn rooftop party Manhattan skyline"},
+  {t:"Subway Busker Jazz",v:"Jazz quartet on L train platform at 14th Street during rush hour",shot:"Low platform",vibe:"Raw, musical",cat:"culture",q:"New York subway busker musician performer"},
+  {t:"Dumbo Bridge Framing",v:"Brooklyn Bridge perfectly framing Manhattan through the gap",shot:"Perfect symmetry",vibe:"Iconic, composed",cat:"city",q:"DUMBO Brooklyn Manhattan Bridge gap view"},
+  {t:"NYC Pizza Fold",v:"Pizza slice being folded in half, grease dripping — the right way",shot:"Macro close",vibe:"Real, satisfying",cat:"food",q:"New York pizza slice fold street"},
+  {t:"Chelsea Market",v:"Lobster Place and artisan stalls under brick arches — Nabisco building",shot:"Market wide",vibe:"Foodie, trendy",cat:"food",q:"Chelsea Market New York food vendors"},
+  {t:"Washington Square Chess",v:"Old men playing speed chess while students skate in autumn light",shot:"Documentary",vibe:"Timeless, local",cat:"lifestyle",q:"Washington Square Park chess players New York"},
+  {t:"One World Trade Night",v:"All of Lower Manhattan lit at night from the top of One WTC",shot:"360 slow pan",vibe:"Memorial, powerful",cat:"city",q:"One World Trade Observatory night New York"},
+  {t:"Coney Island Boardwalk",v:"Vintage Wonder Wheel and Nathan's hot dog against a stormy sky",shot:"Wide moody",vibe:"Nostalgic, American",cat:"lifestyle",q:"Coney Island boardwalk Wonder Wheel New York"},
+],
+"santorini":[
+  {t:"Oia Blue Dome Sunrise",v:"Iconic blue domes emerging from darkness into rose-gold sunrise",shot:"Wide dawn reveal",vibe:"Iconic, breathtaking",cat:"culture",q:"Oia Santorini blue dome sunrise"},
+  {t:"Caldera Infinity Pool",v:"Solo swimmer in cliffside pool with perfect Caldera view",shot:"Side low angle",vibe:"Luxury, surreal",cat:"luxury",q:"Santorini infinity pool caldera view"},
+  {t:"Windmill Dusk Silhouette",v:"16th century windmill against deep violet twilight sky",shot:"Twilight wide",vibe:"Romantic, historic",cat:"culture",q:"Santorini windmill silhouette sunset"},
+  {t:"Red Beach Cliffs",v:"Dramatic red and black volcanic rock above tiny black-sand beach",shot:"From water wide",vibe:"Raw, volcanic",cat:"nature",q:"Red Beach Santorini volcanic cliffs"},
+  {t:"Fira Cat on White Steps",v:"Tabby cat asleep on whitewashed steps with cyclamen flowers",shot:"Intimate close",vibe:"Charming, peaceful",cat:"lifestyle",q:"Santorini cat white steps flowers"},
+  {t:"Winery Caldera View",v:"Vinsanto tasting at cliffside winery with vine terraces descending",shot:"Wide terrace",vibe:"Sophisticated, slow",cat:"food",q:"Santorini wine tasting winery caldera"},
+  {t:"Oia Bougainvillea Alley",v:"Pedestrian alley lined with bougainvillea, ceramics, and blue doors",shot:"Tracking close",vibe:"Wandering, colour",cat:"lifestyle",q:"Oia village alley Santorini bougainvillea"},
+  {t:"Perissa Black Beach",v:"Sunbeds on jet-black volcanic sand facing the open Aegean",shot:"Wide aerial",vibe:"Contrast, striking",cat:"nature",q:"Perissa Black Beach Santorini volcanic sand"},
+  {t:"Amoudi Bay Taverna",v:"Octopus drying above a tiny harbourside taverna in Amoudi Bay",shot:"Wide authentic",vibe:"Greek, timeless",cat:"food",q:"Amoudi Bay taverna octopus Santorini"},
+  {t:"Sunset Wine Clink",v:"Two glasses of Assyrtiko rosé clinking as sun drops into caldera",shot:"Foreground close",vibe:"Romantic, aspirational",cat:"lifestyle",q:"Santorini sunset wine caldera romantic"},
+  {t:"Cave Hotel Interior",v:"Cycladic cave suite — all white curves, no straight lines",shot:"Interior wide",vibe:"Architecture, pure",cat:"luxury",q:"Santorini cave hotel interior white minimal"},
+  {t:"Ancient Akrotiri Ruins",v:"Walking through 3,600-year-old Minoan city preserved under volcanic ash",shot:"Dramatic reveal",vibe:"Historical, cinematic",cat:"culture",q:"Akrotiri archaeological site Santorini ruins"},
+  {t:"Skaros Rock Hike",v:"Hikers crossing narrow ridge to ruined fortress above Imerovigli",shot:"Drone reveal",vibe:"Adventure, dramatic",cat:"adventure",q:"Skaros Rock Imerovigli Santorini hike"},
+  {t:"Fira to Oia Walk",v:"5-hour trail above the caldera cliffs connecting two iconic villages",shot:"Aerial walk",vibe:"Epic journey, freedom",cat:"adventure",q:"Santorini Fira Oia hiking trail caldera"},
+  {t:"Donkey Path Winding",v:"Traditional path zigzagging down the caldera cliff to the old port",shot:"Drone pull-back",vibe:"Traditional, dramatic",cat:"culture",q:"Santorini donkey path cliff caldera"},
+],
+"maldives":[
+  {t:"Glass-Floor Bungalow",v:"Walking on glass floor watching reef sharks pass at sunrise",shot:"Low floor level",vibe:"Surreal, luxury",cat:"luxury",q:"Maldives overwater bungalow glass floor reef"},
+  {t:"Bioluminescent Beach",v:"Waves glowing electric blue with bioluminescent plankton",shot:"Long exposure",vibe:"Magical, ethereal",cat:"nature",q:"bioluminescent beach Maldives glowing waves"},
+  {t:"Manta Ray Station",v:"Giant manta rays circling coral seamount as diver hovers above",shot:"Underwater wide",vibe:"Awe, wildlife",cat:"adventure",q:"manta ray Maldives underwater school"},
+  {t:"Sandbank Dinner",v:"Couple dining on tablecloth on sandbank barely above sea level",shot:"Aerial wide",vibe:"Ultimate romance",cat:"luxury",q:"Maldives sandbank private dinner picnic"},
+  {t:"Whale Shark Snorkel",v:"Freediver dwarfed by 10m whale shark in deep blue North Ari Atoll",shot:"Underwater beside",vibe:"Humbling, wild",cat:"adventure",q:"whale shark Maldives snorkelling underwater"},
+  {t:"Sunset Kayak",v:"Single kayak between horizon and overwater bungalows at last light",shot:"Silhouette wide",vibe:"Peaceful, iconic",cat:"lifestyle",q:"Maldives sunset kayak silhouette bungalow"},
+  {t:"Coral Reef Snorkel",v:"Rainbow coral garden teeming with fish in perfect visibility",shot:"Underwater horizontal",vibe:"Wonder, colour",cat:"nature",q:"Maldives coral reef snorkelling colourful fish"},
+  {t:"Infinity Pool Horizon",v:"Pool edge disappearing into the lagoon — indistinguishable seam",shot:"Edge-level low",vibe:"Seamless, dreamy",cat:"luxury",q:"Maldives infinity pool ocean horizon"},
+  {t:"Seaplane Arrival",v:"Twin-Otter splashing down beside white atoll in turquoise water",shot:"From above wide",vibe:"Arrival, adventurous",cat:"adventure",q:"Maldives seaplane arrival water landing"},
+  {t:"Overwater Hammock",v:"Person in net hammock suspended over crystal-clear lagoon",shot:"Wide overhead",vibe:"Aspirational, slow",cat:"lifestyle",q:"Maldives overwater hammock net lagoon"},
+  {t:"Dolphin Cruise Dusk",v:"Pod of spinner dolphins bow-riding in front of a dhow at sunset",shot:"Low boat level",vibe:"Joyful, wild",cat:"adventure",q:"Maldives dolphin sunset dhow cruise"},
+  {t:"Underwater Restaurant",v:"Dining surrounded by sharks and rays swimming past glass panels",shot:"Interior wide",vibe:"Unique, surreal",cat:"food",q:"Ithaa underwater restaurant Maldives"},
+  {t:"Uninhabited Atoll",v:"No buildings, no people — uninhabited atoll with one palm from above",shot:"Straight down drone",vibe:"Last paradise",cat:"nature",q:"Maldives uninhabited island atoll aerial"},
+  {t:"House Reef Sunset Split",v:"Snorkeller as sky turns orange — perfect split-shot photo",shot:"Split water shot",vibe:"Split world, beautiful",cat:"nature",q:"Maldives house reef sunset snorkel split shot"},
+],
+"kyoto":[
+  {t:"Arashiyama Bamboo Grove",v:"Bamboo corridor with shafts of pale light — silent at 6am",shot:"Wide vertical track",vibe:"Serene, otherworldly",cat:"nature",q:"Arashiyama bamboo grove Kyoto morning light"},
+  {t:"Fushimi Inari Gates Night",v:"10,000 vermillion torii gates winding up Mount Inari by lantern light",shot:"Long tunnel wide",vibe:"Mystical, iconic",cat:"spiritual",q:"Fushimi Inari torii gates night Kyoto"},
+  {t:"Geisha in Gion",v:"Geiko in full kimono turning corner in lantern-lit Gion at dusk",shot:"End-of-alley wide",vibe:"Timeless, cinematic",cat:"culture",q:"Geisha Gion Kyoto kimono alley lantern"},
+  {t:"Philosopher's Path Cherry",v:"Cherry blossom petals falling on stone canal path beside Nanzen-ji",shot:"Low tracking slow",vibe:"Poetic, seasonal",cat:"nature",q:"Philosopher's Path Kyoto cherry blossom canal"},
+  {t:"Tea Ceremony Matcha",v:"Matcha whisked in black raku bowl on tatami in a 400-year-old house",shot:"Macro overhead",vibe:"Meditative, precise",cat:"culture",q:"tea ceremony matcha Kyoto tatami bowl"},
+  {t:"Kinkaku-ji Reflection",v:"Golden Pavilion perfectly mirrored in the still Mirror Pond",shot:"Wide reflection",vibe:"Perfect, iconic",cat:"culture",q:"Kinkaku-ji Golden Pavilion reflection pond Kyoto"},
+  {t:"Ryoan-ji Monk Raking",v:"Monk in grey robes raking patterns in white gravel at first light",shot:"Overhead looking down",vibe:"Zen, meditative",cat:"spiritual",q:"Ryoan-ji rock garden monk raking Kyoto"},
+  {t:"Nishiki Market Tasting",v:"Tiny stalls selling skewered octopus, pickled everything, fresh tofu",shot:"Street level busy",vibe:"Foodie, colour",cat:"food",q:"Nishiki Market Kyoto street food stalls"},
+  {t:"Nijo Castle Night",v:"Cherry blossoms lit blue and purple by digital projection art",shot:"Long exposure walk",vibe:"Magical, modern/ancient",cat:"culture",q:"Nijo Castle night illumination cherry blossom Kyoto"},
+  {t:"Kaiseki Cuisine",v:"12-course kaiseki at a Michelin-starred Kyoto restaurant",shot:"Overhead each course",vibe:"Artful, refined",cat:"food",q:"Kyoto kaiseki cuisine Michelin restaurant food"},
+  {t:"Higashiyama Stone Path",v:"Preserved stone-flagged street with paper lanterns and craft shops",shot:"Wide tracking",vibe:"Historic, atmospheric",cat:"culture",q:"Higashiyama stone path Kyoto lanterns shops"},
+  {t:"Kurama Autumn Maple",v:"Crimson maple leaves along mountain trail above Kurama Onsen",shot:"Forest wide",vibe:"Blazing colour, escape",cat:"nature",q:"Kurama mountain autumn leaves Kyoto maple"},
+  {t:"Sake Brewery Visit",v:"Artisanal brewery — cedar ball hanging outside, tasting room inside",shot:"Interior warm",vibe:"Traditional craft",cat:"culture",q:"Kyoto sake brewery interior tasting traditional"},
+  {t:"Hozugawa Bamboo Raft",v:"Flat-bottomed raft navigating wild rapids through forested gorge",shot:"River level wide",vibe:"Adventure, traditional",cat:"adventure",q:"Hozugawa river raft Arashiyama Kyoto"},
+],
+"istanbul":[
+  {t:"Hagia Sophia Blue Hour",v:"Great dome and minarets reflected in courtyard fountain at twilight",shot:"Wide blue hour",vibe:"Grand, eternal",cat:"culture",q:"Hagia Sophia Istanbul blue hour twilight reflection"},
+  {t:"Grand Bazaar Spices",v:"Pyramid displays of turmeric, paprika, sumac in the Mısır Çarşısı",shot:"Overhead macro",vibe:"Colour, abundant",cat:"food",q:"Istanbul Grand Bazaar spices colourful market"},
+  {t:"Bosphorus Ferry Sunset",v:"View from ferry deck as sun drops behind Topkapi Palace",shot:"Moving wide",vibe:"Romantic, iconic",cat:"city",q:"Istanbul Bosphorus ferry sunset Topkapi"},
+  {t:"Whirling Dervishes",v:"Dervishes in white robes spinning in trance under Ottoman arches",shot:"Low slow-mo",vibe:"Spiritual, hypnotic",cat:"spiritual",q:"whirling dervishes Istanbul Sema ceremony"},
+  {t:"Copper Lanterns Bazaar",v:"Hall of Metalworkers lit by hundreds of hammered copper lamps",shot:"Wide lantern tunnel",vibe:"Warm, atmospheric",cat:"culture",q:"Grand Bazaar Istanbul copper lanterns interior"},
+  {t:"Rooftop Çay Minarets",v:"Tea and simit on rooftop terrace with call to prayer echoing",shot:"Wide terrace",vibe:"Peaceful, authentic",cat:"lifestyle",q:"Istanbul rooftop terrace tea minaret view"},
+  {t:"Galata Bridge Fishermen",v:"500 fishermen simultaneously casting rods at sunset",shot:"Wide line",vibe:"Social, local",cat:"lifestyle",q:"Galata Bridge fishermen Istanbul sunset"},
+  {t:"Basilica Cistern",v:"336 columns rising from underground Byzantine cistern with Medusa base",shot:"Low reflection",vibe:"Mysterious, ancient",cat:"culture",q:"Basilica Cistern Istanbul columns Medusa"},
+  {t:"Midye Street Food",v:"Vendor filling rice into mussels in rapid fire motion at Karaköy",shot:"Close-up hands",vibe:"Street food, real",cat:"food",q:"midye mussel street food Istanbul Karaköy"},
+  {t:"Blue Mosque Iznik Tiles",v:"20,000 hand-painted Iznik tiles covering the dome walls",shot:"Interior fish-eye",vibe:"Sacred, overwhelming",cat:"spiritual",q:"Blue Mosque interior Iznik tiles Istanbul"},
+  {t:"Balık Ekmek Boat",v:"Fish sandwich grilled on a rocking boat below Galata Bridge",shot:"From dock close",vibe:"Authentic, fast",cat:"food",q:"balik ekmek fish sandwich boat Istanbul"},
+  {t:"Taksim Square Dawn",v:"Republic Monument empty at 5am before the city wakes",shot:"Wide empty dawn",vibe:"Quiet, monumental",cat:"city",q:"Taksim Square Istanbul dawn empty morning"},
+  {t:"Princes' Islands Carriage",v:"Horse-drawn carriage through pine forests on car-free Büyükada",shot:"Wide carriage",vibe:"Nostalgic, escape",cat:"culture",q:"Büyükada Princes Island Istanbul horse carriage"},
+  {t:"Dolmabahçe Chandelier",v:"Four-tonne Baccarat chandelier over the ceremonial palace hall",shot:"Interior tilt-up",vibe:"Opulent, historical",cat:"culture",q:"Dolmabahçe Palace interior chandelier Istanbul"},
+],
+"iceland":[
+  {t:"Northern Lights Glacier",v:"Aurora borealis in green and purple above Vatnajökull glacier lagoon",shot:"Long exposure",vibe:"Magical, once-in-lifetime",cat:"nature",q:"Northern Lights aurora borealis Iceland glacier lagoon"},
+  {t:"Jökulsárlón Icebergs",v:"Half-submerged icebergs drifting in milky glacial lagoon at blue hour",shot:"Wide blue",vibe:"Surreal, blue",cat:"nature",q:"Jökulsárlón iceberg lagoon Iceland blue hour"},
+  {t:"Seljalandsfoss Behind",v:"Walking behind a 60m waterfall backlit by the midnight sun",shot:"Behind-fall wide",vibe:"Immersive, epic",cat:"adventure",q:"Seljalandsfoss waterfall behind Iceland"},
+  {t:"Reynisfjara Black Beach",v:"Basalt column cliffs and sneaker waves on Europe's most dramatic beach",shot:"Wide stormy",vibe:"Dramatic, raw",cat:"nature",q:"Reynisfjara black sand beach Iceland basalt"},
+  {t:"Blue Lagoon Steam",v:"Person emerging from geothermal lagoon, steam rising, silica mask on",shot:"Portrait steam",vibe:"Spa, dreamy",cat:"lifestyle",q:"Blue Lagoon Iceland geothermal steam portrait"},
+  {t:"Midnight Sun Drive",v:"Driving Ring Road at midnight with sun still blazing at 11pm",shot:"Timelapse drive",vibe:"Unreal, free",cat:"adventure",q:"Iceland midnight sun Ring Road drive"},
+  {t:"Strokkur Geyser",v:"Extreme slow-motion of geyser bursting 20m from the blue bubble",shot:"Ultra slow-mo",vibe:"Force, surreal",cat:"nature",q:"Strokkur geyser eruption Iceland slow motion"},
+  {t:"Icelandic Horse",v:"Compact horse tölting through snow-dusted volcanic field at dusk",shot:"Tracking alongside",vibe:"Free, beautiful",cat:"nature",q:"Icelandic horse landscape running snow"},
+  {t:"Skógafoss Rainbow",v:"Full double rainbow consistently appearing in the spray at the base",shot:"Face the waterfall",vibe:"Wonder, colour",cat:"nature",q:"Skógafoss waterfall rainbow Iceland"},
+  {t:"Glacier Blue Ice Hike",v:"Ice axe sinking into electric-blue ice — extreme close-up",shot:"Macro ice",vibe:"Intense, blue",cat:"adventure",q:"Iceland glacier hike blue ice Sólheimajökull"},
+  {t:"Reykjavik Colour Houses",v:"Multicoloured corrugated iron houses with snow on rooftops",shot:"Street wide",vibe:"Bright, Nordic",cat:"city",q:"Reykjavik coloured houses winter Iceland"},
+  {t:"Silfra Cave Diving",v:"Freediver floating between North American and Eurasian tectonic plates",shot:"Underwater wide",vibe:"Surreal, pure",cat:"adventure",q:"Silfra fissure snorkelling Iceland tectonic"},
+  {t:"Kerlingarfjöll Geothermal",v:"Wild pink and orange highland geothermal fields steaming remotely",shot:"Wide geothermal",vibe:"Alien, otherworldly",cat:"nature",q:"Kerlingarfjöll geothermal highland Iceland"},
+  {t:"Icelandic Lamb and Skyr",v:"Slow-roasted lamb with skyr, rye bread, wild blueberries on slate",shot:"Overhead food",vibe:"Nordic, pure",cat:"food",q:"Icelandic lamb skyr traditional food"},
+],
+"morocco":[
+  {t:"Fes Tannery Colour Pots",v:"360 stone vessels dyed in saffron, poppy, mint green",shot:"High wide",vibe:"Colour, ancient",cat:"culture",q:"Fes tannery colour pots leather Morocco"},
+  {t:"Sahara Dunes Sunrise",v:"Camel caravan crossing Erg Chebbi ridge as the sun rises",shot:"Silhouette wide",vibe:"Epic, timeless",cat:"adventure",q:"Sahara desert dunes sunrise camel Morocco Merzouga"},
+  {t:"Djemaa el-Fna at Dusk",v:"Square alive — snake charmers, acrobats, 100 food stalls light up",shot:"Wide chaos",vibe:"Overwhelming, alive",cat:"culture",q:"Djemaa el-Fna square Marrakech sunset food stalls"},
+  {t:"Blue City Chefchaouen",v:"Every surface painted cerulean blue — cats in impossibly blue alleys",shot:"Narrow alley",vibe:"Colour therapy, calm",cat:"city",q:"Chefchaouen blue city Morocco alley"},
+  {t:"Riad Courtyard Breakfast",v:"Breakfast on zellij mosaic table — argan oil, honey, msemen",shot:"Overhead wide",vibe:"Private, refined",cat:"food",q:"Riad Marrakech courtyard breakfast mosaic"},
+  {t:"Ait Ben Haddou Sunrise",v:"UNESCO mud-brick ksar glowing terracotta in first light",shot:"Wide dramatic",vibe:"Historical, cinematic",cat:"culture",q:"Ait Benhaddou kasbah sunrise Morocco"},
+  {t:"Souk Spice Alley",v:"Narrow spice alley in Marrakech medina — saffron, ras el hanout",shot:"Street level",vibe:"Sensory, intense",cat:"food",q:"Marrakech medina souk spice alley narrow"},
+  {t:"Night in Desert Camp",v:"Luxury camp under a billion stars — Milky Way over the dunes",shot:"Long exposure",vibe:"Isolated, magical",cat:"lifestyle",q:"Sahara desert camp night stars Milky Way Morocco"},
+  {t:"Essaouira Harbour",v:"Blue fishing boats in ancient port, wind blowing djellabas",shot:"Wide harbour",vibe:"Coastal, atmospheric",cat:"city",q:"Essaouira medina harbour fishing boats Morocco"},
+  {t:"Tagine Steam Reveal",v:"Clay tagine opened at table — slow-cooked lamb and preserved lemon",shot:"Steam reveal",vibe:"Flavourful, authentic",cat:"food",q:"tagine Morocco clay cooking lamb authentic"},
+  {t:"Hammam Steam Room",v:"Fog of steam inside traditional hammam — green marble slabs",shot:"Low steam",vibe:"Ritual, atmospheric",cat:"culture",q:"Hammam steam bath Morocco traditional"},
+  {t:"Carpet Shop Unfurling",v:"Merchant storytelling while unfurling Berber rugs across marble floor",shot:"Interior wide",vibe:"Ritual, colourful",cat:"culture",q:"Moroccan carpet shop rugs merchant interior"},
+  {t:"Ourika Valley Waterfall",v:"Cascades in Atlas foothills — Berber children diving from rocks",shot:"Wide river",vibe:"Natural, local",cat:"nature",q:"Ourika Valley waterfall Atlas Morocco"},
+  {t:"Ouarzazate Sunset Kasbah",v:"Taourirt Kasbah glowing orange at sunset — film capital of Morocco",shot:"Wide dusk",vibe:"Dramatic, golden",cat:"culture",q:"Ouarzazate kasbah sunset Morocco"},
+],
+"thailand":[
+  {t:"Phi Phi Sunrise Boat",v:"Long-tail boat reflected perfectly in jade-green Maya Bay before tourists",shot:"Wide reflection",vibe:"Paradise, iconic",cat:"nature",q:"Phi Phi island Maya Bay boat sunrise Thailand"},
+  {t:"Yi Peng Lantern Festival",v:"10,000 sky lanterns rising simultaneously in Chiang Mai night sky",shot:"Wide sky",vibe:"Magical, emotional",cat:"culture",q:"Yi Peng lantern festival Chiang Mai Thailand"},
+  {t:"Floating Market Canal",v:"Wooden boats loaded with tropical fruit through Damnoen Saduak",shot:"Boat level",vibe:"Colourful, busy",cat:"culture",q:"floating market Thailand Damnoen Saduak canal"},
+  {t:"Muay Thai Dawn Training",v:"Fighter shadow boxing at beachside gym at 6am as sun rises",shot:"Dramatic backlit",vibe:"Discipline, cinematic",cat:"adventure",q:"Muay Thai training Thailand beach sunrise"},
+  {t:"Bangkok Tuk-Tuk Night",v:"Neon-lit tuk-tuk weaving through Chinatown chaos",shot:"Low track",vibe:"Energy, Bangkok",cat:"city",q:"Bangkok tuk-tuk Chinatown night neon"},
+  {t:"Wat Arun Sunrise",v:"Temple of Dawn spires lit gold as sun rises over Chao Phraya",shot:"Wide river",vibe:"Iconic, spiritual",cat:"spiritual",q:"Wat Arun temple sunrise Bangkok river"},
+  {t:"Pad Thai Wok Fire",v:"Street chef flames erupting as noodles toss high above Yaowarat",shot:"Slow-mo fire",vibe:"Fire, energy",cat:"food",q:"Pad Thai street food wok fire Bangkok"},
+  {t:"Elephant Sanctuary",v:"Rescued elephant wading in river — mahout on back, mountains behind",shot:"River wide",vibe:"Conservation, joyful",cat:"nature",q:"elephant sanctuary Thailand river Chiang Rai"},
+  {t:"Bangkok Rooftop Bar",v:"Sky Bar at Lebua — cocktail with entire Bangkok skyline below",shot:"Wide height",vibe:"Height, aspirational",cat:"lifestyle",q:"Bangkok rooftop bar skyline night cocktail"},
+  {t:"Similan Islands Dive",v:"Leopard shark sleeping under coral table, surrounded by fusilier fish",shot:"Underwater wide",vibe:"Wild, blue",cat:"adventure",q:"Similan Islands diving coral shark Thailand"},
+  {t:"Doi Inthanon Clouds",v:"Sea of clouds below Thailand's highest peak — hikers on summit",shot:"Above clouds",vibe:"Achievement, epic",cat:"adventure",q:"Doi Inthanon sunrise Thailand mountain clouds"},
+  {t:"Turquoise Koh Lanta",v:"Snorkeler face-down above coral garden in water with infinite clarity",shot:"Surface split",vibe:"Clean, paradise",cat:"nature",q:"Koh Lanta snorkelling coral clear water Thailand"},
+  {t:"Bangkok Flower Market",v:"Pak Khlong Talat — jasmine garlands and marigolds at 3am",shot:"Market wide",vibe:"Fragrant, colour",cat:"culture",q:"Bangkok flower market Pak Khlong Talat night"},
+  {t:"Night Market Street Food",v:"Dozens of wok stations cooking simultaneously under string lights",shot:"Wide night",vibe:"Bustling, warm",cat:"food",q:"Thailand night market street food cooking"},
+],
+"india":[
+  {t:"Varanasi Ghat at Dawn",v:"Ghee lamps floated on Ganges as pilgrims pray in the mist",shot:"Wide wide river",vibe:"Spiritual, timeless",cat:"spiritual",q:"Varanasi ghat dawn Ganges river Aarti India"},
+  {t:"Jodhpur Blue City",v:"300,000 blue-painted houses spreading across cliff below Mehrangarh",shot:"Drone wide",vibe:"Colour, overwhelming",cat:"city",q:"Jodhpur blue city Mehrangarh Fort aerial India"},
+  {t:"Holi Colour Explosion",v:"Explosions of gulal powder turning Mathura streets into colour clouds",shot:"Wide colour burst",vibe:"Joyous, vivid",cat:"culture",q:"Holi festival colours Mathura India powder"},
+  {t:"Taj Mahal Before Sunrise",v:"The Taj reflected at 5:45am before the first crowds arrive",shot:"Reflection wide",vibe:"Perfect, iconic",cat:"culture",q:"Taj Mahal sunrise reflection empty India Agra"},
+  {t:"Kerala Backwaters",v:"Traditional kettuvallam gliding through green backwater channels",shot:"Low water level",vibe:"Lush, peaceful",cat:"nature",q:"Kerala houseboat backwaters India green canal"},
+  {t:"Mumbai Dabbawalas",v:"Lunchbox network of 5,000 men on bicycles at peak hour",shot:"Street level fast",vibe:"System, energy",cat:"culture",q:"Mumbai dabbawala lunchbox delivery bicycle India"},
+  {t:"Jaisalmer Desert Camp",v:"Camel caravan arriving at luxury camp in Thar Desert at sunset",shot:"Silhouette wide",vibe:"Golden, epic",cat:"adventure",q:"Jaisalmer desert camp camel Thar India sunset"},
+  {t:"Golden Temple Night",v:"Harmandir Sahib glowing gold in Amrit Sarovar lake — reflected perfectly",shot:"Wide night reflection",vibe:"Divine, stunning",cat:"spiritual",q:"Amritsar Golden Temple night reflection India"},
+  {t:"Ladakh Pangong Lake",v:"Surreal blue lake at 4,350m bordered by barren Himalayan hills",shot:"Drone wide",vibe:"Alien beauty, scale",cat:"nature",q:"Pangong Lake Ladakh India Himalayas blue"},
+  {t:"Mumbai Dhobhi Ghat",v:"World's largest open-air laundry from above — geometric view",shot:"Drone overhead",vibe:"Geometric, unique",cat:"city",q:"Dhobhi Ghat Mumbai open air laundry aerial India"},
+  {t:"Ranthambore Tiger",v:"Bengal tiger wading through monsoon-fed pool in Rajasthan jungle",shot:"Long lens wide",vibe:"Wildlife, rare",cat:"nature",q:"Bengal tiger safari India Ranthambore"},
+  {t:"Pushkar Camel Fair",v:"50,000 camels gathered — decorated with bells and bright cloth",shot:"Drone chaos",vibe:"Unique, India",cat:"culture",q:"Pushkar camel fair India aerial colourful"},
+  {t:"India Spice Market",v:"Mountains of crimson chillies and curry leaf bundles in the market",shot:"Street wide",vibe:"Intense, colour",cat:"food",q:"India spice market chillies colour"},
+  {t:"Kathakali Performance",v:"Kathakali dancer in hours-applied makeup performing Mahabharata",shot:"Face close-up",vibe:"Art, ancient",cat:"culture",q:"Kathakali dancer makeup performance Kerala India"},
+],
+"vietnam":[
+  {t:"Ha Long Bay at Dawn",v:"Single kayak through limestone karst islands in morning mist",shot:"Low water wide",vibe:"Peaceful, surreal",cat:"nature",q:"Ha Long Bay kayak limestone karst mist Vietnam"},
+  {t:"Hoi An Lantern Festival",v:"Full moon night with silk lanterns floating on Thu Bon river",shot:"Wide reflection",vibe:"Magical, warm",cat:"culture",q:"Hoi An lantern festival full moon river Vietnam"},
+  {t:"Sapa Rice Harvest",v:"Hmong women cutting golden rice on vertiginous terraces",shot:"Drone pull-back",vibe:"Agricultural, colour",cat:"nature",q:"Sapa rice terraces harvest Vietnam Hmong"},
+  {t:"Bun Cha Hanoi",v:"Street cook fanning charcoal to grill pork over smoky braziers",shot:"Low smoke wide",vibe:"Authentic, flavour",cat:"food",q:"Bun Cha street food Hanoi alley charcoal Vietnam"},
+  {t:"Phong Nha Cave Kayak",v:"Kayaking through river cave cathedral 80m tall by headlamp",shot:"Looking up wide",vibe:"Awe, adventure",cat:"adventure",q:"Phong Nha cave kayaking Vietnam underground river"},
+  {t:"Hanoi Motorbike Chaos",v:"200 motorbikes flowing around single pedestrian at Hoan Kiem",shot:"High wide",vibe:"Chaos, energy",cat:"city",q:"Hanoi street traffic motorbikes Vietnam"},
+  {t:"Mekong Delta Boat",v:"Racing through floating market channels at 6am on wooden longtail",shot:"From bow fast",vibe:"Speed, real Vietnam",cat:"adventure",q:"Mekong Delta Vietnam floating market boat"},
+  {t:"Phở at 5am",v:"Chef ladling 12-hour bone broth over hand-pulled pho noodles",shot:"Close steam",vibe:"Ritualistic, comfort",cat:"food",q:"Pho Vietnam bowl close up steam broth"},
+  {t:"Mù Cang Chải Aerial",v:"Golden rice terraces carved into mountain faces at harvest time",shot:"Aerial sweeping",vibe:"Geometric, golden",cat:"nature",q:"Mu Cang Chai rice terraces drone Vietnam harvest"},
+  {t:"Ninh Binh Cave Boat",v:"Local woman rowing with her feet through cave-tunnels above Trang An",shot:"Low cave level",vibe:"Ancient, peaceful",cat:"nature",q:"Ninh Binh Trang An boat cave rowing Vietnam"},
+  {t:"Hoi An Tailor Lane",v:"Seamstresses working on silk ao dai in back-alley studios",shot:"Peek-in close",vibe:"Craft, colour",cat:"culture",q:"Hoi An tailor shop ao dai Vietnam silk"},
+  {t:"Con Dao Turtle Reef",v:"Sea turtle rising through coral columns to breathe at surface",shot:"Underwater up",vibe:"Wildlife, blue",cat:"nature",q:"Con Dao sea turtle reef Vietnam snorkelling"},
+  {t:"Vietnam Night Train",v:"Sleeper train pushing through karst highlands — bunk beds, rice fields",shot:"From bunk wide",vibe:"Journey, romantic",cat:"adventure",q:"Vietnam train night sleeper landscape"},
+],
+"seoul":[
+  {t:"Gyeongbokgung in Snow",v:"Joseon palace with guardsmen in costume, snow falling silently",shot:"Wide ceremonial",vibe:"Timeless, magical",cat:"culture",q:"Gyeongbokgung Palace snow Seoul Korea"},
+  {t:"Gangnam Night Skyline",v:"COEX district skyline — drone pulling back over Han River",shot:"Drone pull-back",vibe:"Modern, power",cat:"city",q:"Gangnam Seoul skyline night Korea drone"},
+  {t:"Hongdae Street Dance",v:"Dance crew battle drawing 500 spectators outside Hongdae station",shot:"Circle crowd",vibe:"Energy, youth",cat:"lifestyle",q:"Hongdae street performance dance Seoul Korea"},
+  {t:"Korean BBQ Close-Up",v:"Samgyeopsal sizzling on charcoal grill — tongs flipping in slow-mo",shot:"Macro grill",vibe:"Satisfying, foodie",cat:"food",q:"Korean BBQ samgyeopsal grill table Seoul"},
+  {t:"Bukchon Hanok Village",v:"Narrow lane of 600 traditional hanok tiles in autumn morning mist",shot:"Tracking low",vibe:"Heritage, tranquil",cat:"culture",q:"Bukchon Hanok Village Seoul alley traditional"},
+  {t:"Namdaemun Night Market",v:"Ddukbokki and haemul pajeon vendors under streetlamps at night",shot:"Street level warm",vibe:"Street food, night",cat:"food",q:"Namdaemun night market Seoul food Korea"},
+  {t:"K-Pop Dance Studio",v:"Practice room windows show dance crews rehearsing late at night",shot:"Outside looking in",vibe:"Energy, aspiration",cat:"lifestyle",q:"Seoul K-pop dance studio practice Korea"},
+  {t:"Lotte Tower Glass Floor",v:"135th floor glass floor — Lotte World Theme Park directly below",shot:"Feet on glass",vibe:"Vertiginous, modern",cat:"city",q:"Lotte World Tower Seoul observation deck glass floor"},
+  {t:"Yeouido Cherry Blossom",v:"Han River park lined with cherry blossom for 10km in spring",shot:"Wide aerial",vibe:"Seasonal, joyful",cat:"nature",q:"Yeouido cherry blossom Seoul spring Han River"},
+  {t:"N Seoul Tower Night",v:"N Seoul Tower with Seoul spreading in every direction at midnight",shot:"Wide rotation",vibe:"Iconic, night",cat:"city",q:"N Seoul Tower Namsan night view city"},
+  {t:"Jimjilbang Experience",v:"Regulars on heated floors eating eggs in paper clothes",shot:"Wide interior",vibe:"Cultural, relaxed",cat:"culture",q:"jimjilbang Korean sauna interior Seoul"},
+  {t:"Gamcheon Village Drone",v:"Pastel maze of houses on cliff in Busan — Korea's Cinque Terre",shot:"Drone overhead",vibe:"Colour, art",cat:"city",q:"Gamcheon Culture Village Busan Korea colourful"},
+  {t:"DMZ Border Zone",v:"Soldiers facing each other across the 38th parallel",shot:"Long lens tense",vibe:"Historical, tense",cat:"culture",q:"DMZ border zone Korea soldiers North South"},
+],
+"rome":[
+  {t:"Trevi Fountain at 5am",v:"Trevi Fountain completely empty and glowing gold before tourists",shot:"Wide magical",vibe:"Iconic, private",cat:"culture",q:"Trevi Fountain Rome empty dawn 5am"},
+  {t:"Colosseum Through Forum",v:"Colosseum framed by broken arch of the Roman Forum at sunset",shot:"Through arch",vibe:"Timeless, cinematic",cat:"culture",q:"Colosseum through Roman Forum arch Rome sunset"},
+  {t:"Trastevere at Night",v:"Ancient neighbourhood of ochre walls and ivy under warm streetlamps",shot:"Wide warm night",vibe:"Timeless, romantic",cat:"city",q:"Trastevere Rome night alley warm light"},
+  {t:"Carbonara Being Made",v:"Guanciale crisping — egg and pecorino emulsifying in real time",shot:"Kitchen close",vibe:"Authentic, satisfying",cat:"food",q:"Rome carbonara traditional pasta making guanciale"},
+  {t:"Gianicolo Panorama",v:"Rome's best panorama — every dome visible in the evening haze",shot:"Wide panorama",vibe:"Breathtaking, cinematic",cat:"city",q:"Gianicolo Hill panorama Rome panoramic view"},
+  {t:"Campo de' Fiori Market",v:"Morning produce market beneath Giordano Bruno — artichokes, flowers",shot:"Market wide",vibe:"Roman life, warm",cat:"food",q:"Campo de Fiori market Rome produce morning"},
+  {t:"Pantheon Rain Oculus",v:"Rain falling through the 9m Oculus creating a column of water",shot:"Oculus up",vibe:"Ancient engineering",cat:"culture",q:"Pantheon Oculus rain Rome interior"},
+  {t:"St Peter's at Dawn",v:"Bernini's perfect ellipse empty at sunrise in soft mist",shot:"Wide aerial dawn",vibe:"Grand, spiritual",cat:"spiritual",q:"St Peter's Square Vatican empty dawn Rome"},
+  {t:"Vespa Ride at Night",v:"Young Romans riding Vespas through narrow Centro Storico streets",shot:"Low follow",vibe:"Roman lifestyle",cat:"lifestyle",q:"Vespa scooter Rome street night young"},
+  {t:"Artisanal Gelato",v:"Gelatiere pouring pistachio base into the steel container",shot:"Close process",vibe:"Craft, indulgence",cat:"food",q:"artisanal gelato making Rome pistachio craft"},
+  {t:"Baths of Caracalla Night",v:"Ruined Thermae lit with dramatic up-lighting from 400AD",shot:"Wide dramatic",vibe:"Ancient power, ruins",cat:"culture",q:"Baths of Caracalla Rome night illumination ruins"},
+  {t:"Wood-Fired Pizza",v:"Roman pizza bianca pulled from 400-degree wood oven with a peel",shot:"Oven close",vibe:"Pure Roman, honest",cat:"food",q:"Rome pizza bianca forno oven wood fired"},
+  {t:"Sistine Chapel Ceiling",v:"Michelangelo's ceiling — impossible to capture fully from below",shot:"Fish-eye up",vibe:"Overwhelming, sacred",cat:"culture",q:"Sistine Chapel ceiling Michelangelo Rome Vatican"},
+  {t:"Piazza Navona Baroque",v:"Bernini's Fountain of the Four Rivers with artists and the church",shot:"Wide piazza",vibe:"Baroque, lively",cat:"culture",q:"Piazza Navona Rome fountain Bernini baroque"},
+],
+"singapore":[
+  {t:"Supertrees Light Show",v:"18 Supertrees glowing through the nightly light and music show",shot:"Wide slow pan",vibe:"Futuristic, colour",cat:"city",q:"Gardens by the Bay Supertree Singapore night light show"},
+  {t:"MBS Infinity Pool",v:"150m pool on 57th floor looking at Singapore's skyline",shot:"Edge wide",vibe:"Luxury, iconic",cat:"luxury",q:"Marina Bay Sands infinity pool Singapore skyline"},
+  {t:"Hawker Centre Rush",v:"1,000 people eating at Maxwell Road during the noon rush",shot:"High wide chaos",vibe:"Energy, real",cat:"food",q:"Singapore hawker centre Maxwell Road lunch rush"},
+  {t:"Sultan Mosque Haji Lane",v:"Gold dome rising behind colourful Haji Lane shop fronts",shot:"Street portrait",vibe:"Multicultural, colour",cat:"culture",q:"Kampong Glam Arab Quarter Singapore Sultan Mosque Haji Lane"},
+  {t:"Temple Incense Coils",v:"Giant incense coils hanging from ceiling of Thian Hock Keng for 30 days",shot:"Look-up close",vibe:"Sacred, smoky",cat:"spiritual",q:"Singapore Chinatown temple incense coils Thian Hock Keng"},
+  {t:"Clarke Quay Night",v:"Colonial warehouses converted to restaurants along the river",shot:"Wide reflection",vibe:"Lively, neon",cat:"city",q:"Clarke Quay Singapore night river reflection"},
+  {t:"Deepavali Little India",v:"Serangoon Road transformed into tunnel of 100,000 lights",shot:"Wide perspective",vibe:"Festive, bright",cat:"culture",q:"Little India Deepavali lights Singapore Serangoon"},
+  {t:"Jewel Rain Vortex",v:"World's largest indoor waterfall — 40m inside the airport dome",shot:"Wide look-up",vibe:"Extraordinary, engineering",cat:"city",q:"Jewel Changi Airport Rain Vortex waterfall Singapore"},
+  {t:"Chilli Crab",v:"Cracking into Sri Lankan crab wok-tossed in chilli at seafood restaurant",shot:"Close hands",vibe:"Messy, delicious",cat:"food",q:"chilli crab Singapore seafood restaurant"},
+  {t:"Singapore Skyline Sunrise",v:"City reflects in reservoir as sun rises from Marina Barrage",shot:"Sunrise time-lapse",vibe:"Majestic, golden",cat:"city",q:"Singapore skyline sunrise Marina Bay reservoir"},
+  {t:"Peranakan Katong Houses",v:"Rainbow row of Peranakan terrace houses with intricate tiles",shot:"Street facing",vibe:"Heritage, colour",cat:"culture",q:"Peranakan Katong houses Singapore colourful terrace"},
+  {t:"Night Safari",v:"White rhino 2 metres away in darkness — world's first nocturnal park",shot:"Long lens low",vibe:"Wild, unique",cat:"nature",q:"Singapore Night Safari animal dark rhino"},
+  {t:"Singapore Sling at Raffles",v:"Original cocktail prepared at Long Bar since 1915",shot:"Bar close-up",vibe:"Classic, historical",cat:"lifestyle",q:"Singapore Sling cocktail Raffles Hotel Long Bar"},
+],
+"amsterdam":[
+  {t:"Keukenhof Tulip Aerial",v:"Drone over 7 million tulips in geometric patterns during peak bloom",shot:"Straight down drone",vibe:"Colour, spring",cat:"nature",q:"Keukenhof tulips aerial drone Netherlands bloom"},
+  {t:"Canal Bridge at Dawn",v:"Cyclist crossing canal bridge as mist lifts from the water",shot:"Bridge level",vibe:"Peaceful, iconic",cat:"city",q:"Amsterdam canal bridge morning mist bicycle"},
+  {t:"Rijksmuseum Arch",v:"Cyclists riding through arched passage below Rijksmuseum at blue hour",shot:"Arch perspective",vibe:"Architectural, iconic",cat:"culture",q:"Rijksmuseum Amsterdam cyclists arch entrance"},
+  {t:"Alkmaar Cheese Market",v:"Porters in white uniforms carrying Edam cheeses on wooden sledges",shot:"Wide market",vibe:"Traditional Dutch, unique",cat:"culture",q:"Alkmaar cheese market porters Netherlands traditional"},
+  {t:"Vondelpark Sunday",v:"Thousands picnicking, cycling, sunbathing in Vondelpark in June",shot:"Wide warm",vibe:"Social, local",cat:"lifestyle",q:"Vondelpark Amsterdam picnic Sunday summer"},
+  {t:"Stroopwafel on Coffee",v:"Syrup waffle being laid on rim of hot coffee cup to warm",shot:"Close macro",vibe:"Comfort, Dutch",cat:"food",q:"stroopwafel Dutch waffle coffee Netherlands"},
+  {t:"Zaanse Schans Windmill",v:"De Gooyer windmill turning above frozen Dutch canal in January",shot:"Wide reflection",vibe:"Traditional, classic",cat:"culture",q:"Zaanse Schans windmill Netherlands canal"},
+  {t:"Albert Cuyp Market",v:"Europe's longest street market — 260 stalls of herring, stroopwafel",shot:"Wide market",vibe:"Local, abundant",cat:"food",q:"Albert Cuyp Market Amsterdam street vendors"},
+  {t:"Cyclist Rush Hour Drone",v:"30 cyclists side-by-side on Amsterdam's Damrak during rush hour",shot:"High straight down",vibe:"Sustainable, unique",cat:"city",q:"Amsterdam cyclists bikes road aerial overhead"},
+  {t:"Jenever Tasting",v:"Dutch gin poured to the brim in a tulip glass at 17th-c tasting room",shot:"Bar close",vibe:"Authentic Dutch",cat:"food",q:"jenever Dutch gin proeflokaal Amsterdam tasting"},
+  {t:"Houseboat Life",v:"Resident watering plants on rooftop of houseboat on Prinsengracht",shot:"From canal bank",vibe:"Alternative life",cat:"lifestyle",q:"Amsterdam houseboat canal resident Prinsengracht"},
+  {t:"Tulip Fields Sunset",v:"Perfectly straight rows of red and yellow tulips at golden hour",shot:"Low row wide",vibe:"Dutch painting, colour",cat:"nature",q:"tulip fields Netherlands Lisse sunset rows"},
+  {t:"Gay Pride Canal Parade",v:"800,000 spectators and 80 decorated boats on Pride Canal Parade",shot:"Wide aerial",vibe:"Celebratory, colour",cat:"culture",q:"Amsterdam Gay Pride canal parade boats"},
+],
+"capetown":[
+  {t:"Table Mountain Tablecloth",v:"Cloud pouring over the flat top as the city shimmers below",shot:"Wide dramatic",vibe:"Natural wonder",cat:"nature",q:"Table Mountain cloud tablecloth Cape Town"},
+  {t:"Boulders Beach Penguins",v:"African penguins waddling between sunbathers on white sand beach",shot:"Wide beach",vibe:"Unexpected, charming",cat:"nature",q:"Boulders Beach penguins Cape Town Simon's Town"},
+  {t:"Cape Point Cliffs",v:"Sheer quartzite cliffs dropping 200m into the meeting of two oceans",shot:"Drone edge",vibe:"Edge of Africa, raw",cat:"nature",q:"Cape Point cliffs South Africa two oceans"},
+  {t:"Bo-Kaap Painted Houses",v:"Steep cobblestone street of pastel Malay Quarter houses at first light",shot:"Street facing",vibe:"Colour, heritage",cat:"culture",q:"Bo-Kaap painted houses Cape Town steep street"},
+  {t:"Stellenbosch Vineyard",v:"Drone over vineyard rows turning gold in autumn harvest",shot:"Aerial golden",vibe:"Pastoral, luxury",cat:"nature",q:"Stellenbosch vineyard aerial autumn Cape Town"},
+  {t:"Camps Bay Sunset",v:"Twelve Apostles mountains behind tanned bodies at golden hour",shot:"Wide beach golden",vibe:"Beautiful, social",cat:"lifestyle",q:"Camps Bay beach sunset Cape Town mountains"},
+  {t:"Zeitz MOCAA Silos",v:"Nine floors of contemporary African art inside converted grain silos",shot:"Interior look-up",vibe:"Art, architectural",cat:"culture",q:"Zeitz MOCAA Cape Town interior art museum silo"},
+  {t:"Great White Shark Breach",v:"Great white breaching at Shark Alley off Gansbaai",shot:"From boat low",vibe:"Adrenaline, wild",cat:"adventure",q:"great white shark breach Cape Town Gansbaai"},
+  {t:"V&A Waterfront Night",v:"Restored waterfront with Table Mountain lit behind and yachts",shot:"Wide reflection",vibe:"Vibrant, scenic",cat:"city",q:"V&A Waterfront Cape Town night Table Mountain"},
+  {t:"Robben Island Cell",v:"The 2m×2m cell where Mandela spent 18 years",shot:"Interior close",vibe:"Historical, powerful",cat:"culture",q:"Robben Island Mandela cell Cape Town prison"},
+  {t:"Chapman's Peak Drive",v:"Winding cliff road with sheer Atlantic drop",shot:"Aerial drive",vibe:"Dramatic road, epic",cat:"adventure",q:"Chapman's Peak Drive Cape Town winding cliff road"},
+  {t:"Lion's Head Sunrise",v:"Hikers on Lion's Head peak with full city and ocean panorama at dawn",shot:"Summit wide",vibe:"Achievement, epic",cat:"adventure",q:"Lion's Head hike sunrise Cape Town panorama"},
+  {t:"Braai at Sunset",v:"Family around wood fire braai as Table Mountain turns pink behind",shot:"Wide warm life",vibe:"Local life, warm",cat:"food",q:"South African braai sunset Table Mountain family"},
+],
+"sydney":[
+  {t:"Opera House Blue Hour",v:"Opera House shells glowing white against deep navy sky 20min after sunset",shot:"Wide harbour",vibe:"Iconic, world-class",cat:"culture",q:"Sydney Opera House blue hour twilight harbour"},
+  {t:"Bondi Morning Swim",v:"Open water swimmers rounding Icebergs rock pool at 7am",shot:"From cliff",vibe:"Australian, active",cat:"lifestyle",q:"Bondi Beach morning swim pool cliff Sydney"},
+  {t:"Vivid Sydney Projections",v:"Opera House sails covered in projections during Vivid Light Festival",shot:"Wide projection",vibe:"Creative, magical",cat:"city",q:"Vivid Sydney light show Opera House projections"},
+  {t:"Bondi to Coogee Walk",v:"Exposed sandstone path above crashing Pacific surf",shot:"Wide cliff",vibe:"Freedom, coastal",cat:"adventure",q:"Bondi to Coogee coastal walk Sydney cliff"},
+  {t:"Harbour Bridge Summit",v:"Couples at top of Sydney Harbour Bridge arch — 134m above harbour",shot:"Top wide",vibe:"Achievement, view",cat:"adventure",q:"Sydney Harbour Bridge climb top summit"},
+  {t:"Fish Market Auction",v:"Auctioneer and fishmongers running through Sydney Fish Market at 6am",shot:"Wide fast",vibe:"Energy, authentic",cat:"food",q:"Sydney Fish Market tuna auction morning"},
+  {t:"Northern Beaches Surf",v:"Surfer dropping into perfect A-frame wave at Avalon Beach",shot:"In water lens",vibe:"Australian surf",cat:"adventure",q:"Northern Beaches surf Sydney Avalon wave"},
+  {t:"Chinatown Night Market",v:"Dixon Street food carts with dumplings under red lanterns at night",shot:"Night market",vibe:"Cultural, food",cat:"food",q:"Sydney Chinatown night market Dixon Street lanterns"},
+  {t:"Taronga Zoo Giraffe",v:"Giraffe's head perfectly framing Sydney CBD skyline across harbour",shot:"Through giraffe",vibe:"Unique, iconic",cat:"nature",q:"Taronga Zoo giraffe Sydney Harbour skyline"},
+  {t:"The Rocks Sandstone",v:"First Fleet convict-carved sandstone alley at golden hour",shot:"Low cobblestone",vibe:"Colonial history",cat:"culture",q:"The Rocks sandstone alley Sydney colonial history"},
+  {t:"Royal National Park",v:"Sea cliffs at sunrise — oldest national park in the world",shot:"Cliff dawn",vibe:"Pristine, vast",cat:"nature",q:"Royal National Park sea cliff sunrise Sydney"},
+  {t:"Sydney CBD Timelapse",v:"Time-lapse from Sydney Tower of CBD traffic and lights over 4 hours",shot:"Timelapse wide",vibe:"Energy, night",cat:"city",q:"Sydney CBD night timelapse city lights"},
+  {t:"Barangaroo Dusk",v:"New financial district with ferry traffic and Opera House at dusk",shot:"Wide waterfront",vibe:"New Sydney, modern",cat:"city",q:"Barangaroo Sydney dusk waterfront harbour"},
+],
+"london":[
+  {t:"Tower Bridge Blue Hour",v:"Tower Bridge lit in blue and gold reflected in still Thames at 9pm",shot:"Wide reflection",vibe:"Iconic, majestic",cat:"city",q:"Tower Bridge London night blue hour reflection Thames"},
+  {t:"Borough Market Saturday",v:"600-year-old food market under Southwark railway arches",shot:"Market wide",vibe:"Food, London",cat:"food",q:"Borough Market London Saturday vendors artisan"},
+  {t:"Changing of the Guard",v:"Household Cavalry in ceremonial dress trotting down the Mall",shot:"Wide ceremonial",vibe:"Tradition, spectacle",cat:"culture",q:"Changing of the Guard London Buckingham Palace"},
+  {t:"Notting Hill Carnival",v:"Europe's largest street festival — 2 million people, steel bands",shot:"Wide colour",vibe:"Carnival, vibrant",cat:"culture",q:"Notting Hill Carnival London costumes street"},
+  {t:"Underground Platform Blur",v:"Night Tube streaking past Victoria Station platform",shot:"Platform long exposure",vibe:"City motion",cat:"city",q:"London Underground tube platform night blur"},
+  {t:"Greenwich Park Skyline",v:"London's skyline from the Royal Observatory on the hill",shot:"Hillside wide",vibe:"Classic, panorama",cat:"city",q:"Greenwich Park London skyline view hill"},
+  {t:"Shoreditch Street Art",v:"Ever-changing Shoreditch murals — Banksy among thousands of works",shot:"Street wide",vibe:"Art, gritty",cat:"culture",q:"Brick Lane Shoreditch street art London mural"},
+  {t:"Afternoon Tea Claridge's",v:"Three-tier stand with finger sandwiches and scones in art deco room",shot:"Overhead table",vibe:"Luxury, British",cat:"food",q:"afternoon tea Claridge's London hotel traditional"},
+  {t:"Thames Sunrise Rower",v:"Rower on Thames with early mist and golden light on St Paul's",shot:"Low river",vibe:"Peaceful, cinematic",cat:"city",q:"Thames river sunrise rower mist London St Paul's"},
+  {t:"Tate Modern Turbine Hall",v:"35m-tall Turbine Hall transformed by contemporary art installation",shot:"Interior wide",vibe:"Art, scale",cat:"culture",q:"Tate Modern Turbine Hall installation London interior"},
+  {t:"Primrose Hill Sunset",v:"Panoramic London skyline from Primrose Hill — locals, dogs, golden light",shot:"Wide golden",vibe:"Local life, beauty",cat:"city",q:"Primrose Hill London skyline sunset panoramic"},
+  {t:"St Paul's in Snow",v:"St Paul's dome emerging through rare London snowfall — silent streets",shot:"Wide snowy",vibe:"Rare beauty",cat:"culture",q:"St Paul's Cathedral London snow winter rare"},
+  {t:"The Shard Sunrise",v:"London spread in every direction from Level 72 of The Shard at 7am",shot:"Window wide",vibe:"Height, epic",cat:"city",q:"The Shard London sunrise observation deck level 72"},
+  {t:"Kew Gardens Glasshouse",v:"Largest Victorian glasshouse in world — restored 2018",shot:"Interior look-up",vibe:"Green, architectural",cat:"nature",q:"Kew Gardens Temperate House glasshouse London interior"},
+],
+};
+
+// ════════════════════════════════════════════════════════════
+//  KEY ALIASES
+// ════════════════════════════════════════════════════════════
+const ALIAS = {
+  'nyc':'newyork','new york city':'newyork','new york':'newyork','manhattan':'newyork',
+  'cape town':'capetown','south africa':'capetown',
+  'ubud':'bali','seminyak':'bali','canggu':'bali','kuta':'bali',
+  'osaka':'kyoto','nara':'kyoto','uji':'kyoto',
+  'busan':'seoul','south korea':'seoul','korea':'seoul',
+  'marrakech':'morocco','marrakesh':'morocco','fes':'morocco','fez':'morocco',
+  'hanoi':'vietnam','ho chi minh':'vietnam','hcmc':'vietnam','saigon':'vietnam',
+  'dubai uae':'dubai','abu dhabi':'dubai',
+  'london uk':'london','england':'london',
+  'bkk':'bangkok','phuket':'thailand','chiang mai':'thailand','ko samui':'thailand',
+  'amalfi':'rome','positano':'rome','colosseum':'rome',
+  'santorini greece':'santorini','oia':'santorini','fira':'santorini',
+};
+
+const QUICK_LIST = ['Bali','Tokyo','Paris','Dubai','Maldives','Santorini','New York','Kyoto','Istanbul','Iceland','Morocco','Thailand','India','Vietnam','Seoul','Rome','Singapore','Amsterdam','Cape Town','Sydney','London','Barcelona'];
+const REGIONS = [
+  {lbl:'🌏 Asia',  k:'bali'},
+  {lbl:'🇪🇺 Europe', k:'paris'},
+  {lbl:'🌍 Mid East / Africa', k:'dubai'},
+  {lbl:'🌎 Americas / Oceania', k:'newyork'},
+];
+const CATS = [
+  {lbl:'🏛 Culture',key:'culture'},{lbl:'🌿 Nature',key:'nature'},{lbl:'🍜 Food',key:'food'},
+  {lbl:'✨ Lifestyle',key:'lifestyle'},{lbl:'🚀 Adventure',key:'adventure'},
+  {lbl:'🏙 City',key:'city'},{lbl:'👑 Luxury',key:'luxury'},{lbl:'🙏 Spiritual',key:'spiritual'},
+];
+const HERO_CHIPS = ['Bali','Tokyo','Paris','Dubai','Maldives','Iceland','Morocco','Seoul','Santorini','India','Vietnam','Cape Town'];
+
+// ════════════════════════════════════════════════════════════
+//  STATE  — everything resets per search
+// ════════════════════════════════════════════════════════════
+let S = {
+  keyword:'', searchId:0,
+  cohorts:[], filtered:[],
+  media:[], mediaFiltered:[], mediaShown:20,
+  activeCohort:null, catFilter:'all',
+  mediaType:'all', resolution:'all', orientation:'all',
+  activeSrcs:new Set(['pexels','pixabay','unsplash']),
+  sortMedia:'score', loading:false, mediaLoading:false,
+};
+
+// ════════════════════════════════════════════════════════════
+//  API KEYS
+// ════════════════════════════════════════════════════════════
+const K = {
+  get pexels()    { return localStorage.getItem('rb_pexels')    || ''; },
+  get pixabay()   { return localStorage.getItem('rb_pixabay')   || ''; },
+  get unsplash()  { return localStorage.getItem('rb_unsplash')  || ''; },
+  get anthropic() { return localStorage.getItem('rb_anthropic') || ''; },
+};
+
+// ════════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  buildSidebar(); buildHeroChips(); renderHistory(); renderSaved(); loadModalInputs(); updateKeysStatus();
+  document.getElementById('q').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+});
+
+function buildSidebar() {
+  document.getElementById('quickGrid').innerHTML = QUICK_LIST.map(c =>
+    `<div class="q-chip" onclick="kw('${c}')">${c}</div>`).join('');
+  document.getElementById('regionBtns').innerHTML = REGIONS.map(r =>
+    `<button class="sb-btn" onclick="kw('${r.k}')">${r.lbl}</button>`).join('');
+  document.getElementById('catBtns').innerHTML =
+    `<button class="sb-btn on" id="scat_all" onclick="setSbCat('all',this)">⊞ All</button>` +
+    CATS.map(c => `<button class="sb-btn" id="scat_${c.key}" onclick="setSbCat('${c.key}',this)">${c.lbl}</button>`).join('');
+}
+
+function buildHeroChips() {
+  document.getElementById('heroChips').innerHTML = HERO_CHIPS.map(c =>
+    `<div class="h-chip" onclick="kw('${c}')">${flag(c)} ${c}</div>`).join('');
+}
+
+function setSbCat(cat, btn) {
+  S.catFilter = cat;
+  document.querySelectorAll('[id^="scat_"]').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  applyCohortFilter();
+}
+
+function kw(w) { document.getElementById('q').value = w; doSearch(); }
+
+// ════════════════════════════════════════════════════════════
+//  SEARCH — COMPLETE STATE RESET ON EVERY CALL
+// ════════════════════════════════════════════════════════════
+async function doSearch() {
+  const raw = document.getElementById('q').value.trim();
+  if (!raw) return;
+
+  // ── FULL RESET ──────────────────────────────────────────────
+  const sid = Date.now();
+  Object.assign(S, {
+    keyword:raw, searchId:sid,
+    cohorts:[], filtered:[], media:[], mediaFiltered:[],
+    mediaShown:20, activeCohort:null, catFilter:'all',
+    mediaType:'all', resolution:'all', orientation:'all',
+    activeSrcs:new Set(['pexels','pixabay','unsplash']),
+    loading:true, mediaLoading:false,
+  });
+  // ────────────────────────────────────────────────────────────
+
+  const hero = document.getElementById('hero');
+  if (hero) hero.style.display = 'none';
+  document.getElementById('searchBtn').disabled = true;
+  document.getElementById('saveBtn').classList.remove('saved');
+  document.querySelectorAll('.q-chip').forEach(c => c.classList.toggle('on', c.textContent.toLowerCase() === raw.toLowerCase()));
+
+  renderMain();
+
+  await buildCohorts(raw, sid);
+  if (S.searchId !== sid) return; // aborted by newer search
+
+  S.loading = false;
+  addToHistory(raw);
+  renderMain();
+  document.getElementById('searchBtn').disabled = false;
+}
+
+// ════════════════════════════════════════════════════════════
+//  COHORT BUILDING
+// ════════════════════════════════════════════════════════════
+async function buildCohorts(kw, sid) {
+  const norm  = kw.toLowerCase().replace(/\s+/g,'');
+  const alias = ALIAS[kw.toLowerCase()];
+  let ideas = DB[norm] || DB[alias] || null;
+  if (!ideas) {
+    const match = Object.keys(DB).find(k => norm.includes(k) || k.includes(norm));
+    if (match) ideas = DB[match];
+  }
+  if (ideas) {
+    S.cohorts = ideas.map((item,i) => ({...item, rank:i+1, vol:volEst(item.q), trend:i<3?'hot':i<8?'rising':'stable'}));
+    return;
+  }
+  if (K.anthropic) { S.cohorts = await genAI(kw, sid); return; }
+  S.cohorts = smartFallback(kw);
+}
+
+function volEst(q) {
+  const words = q.split(' ').length;
+  const pop = ['sunset','beach','travel','city','food','nature','aerial','golden'].some(w=>q.includes(w));
+  return words<=2&&pop ? '~50K+ results' : pop ? '~20K+ results' : '~8K+ results';
+}
+
+async function genAI(kw, sid) {
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':K.anthropic,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:3000,messages:[{role:'user',content:
+        `Generate exactly 30 SPECIFIC, UNIQUE reel cohorts for: "${kw}"
+RULES: Each must be a distinct filmable concept SPECIFIC to "${kw}". Rank by estimated content upload volume. Cover: golden hour, aerial, street, food, cultural, architecture, nature, people, adventure, night.
+Return ONLY a valid JSON array (no markdown):
+[{"t":"Punchy title max 6 words","v":"Specific visual description","shot":"Shot type","vibe":"Mood","cat":"culture|nature|food|lifestyle|adventure|city|luxury|spiritual","q":"3-5 word Pexels query"}]`
+      }]})
+    });
+    if (S.searchId!==sid) return smartFallback(kw);
+    const d = await r.json();
+    const txt = d.content?.[0]?.text||'[]';
+    const arr = JSON.parse(txt.replace(/```json|```/g,'').trim());
+    return arr.slice(0,30).map((item,i)=>({...item,rank:i+1,vol:volEst(item.q),trend:i<3?'hot':i<8?'rising':'stable'}));
+  } catch(e) { return smartFallback(kw); }
+}
+
+function smartFallback(kw) {
+  const slots = [
+    {t:`${kw} at Golden Hour`,v:`Wide panoramic of ${kw} bathed in amber light just before sunset`,shot:'Wide golden',vibe:'Cinematic, warm',cat:'nature',q:`${kw} golden hour sunset landscape`},
+    {t:`${kw} Aerial Drone View`,v:`Drone pulling back to reveal the full scale and pattern of ${kw}`,shot:'Drone pull-back',vibe:'Scale, epic',cat:'city',q:`${kw} aerial drone view`},
+    {t:`${kw} Street Food`,v:`Vendor rapidly preparing ${kw}'s most iconic dish at street level`,shot:'Street level',vibe:'Authentic, appetising',cat:'food',q:`${kw} street food vendor local`},
+    {t:`${kw} Sunrise Empty`,v:`The most iconic view in ${kw} completely empty at 5:30am — blue hour`,shot:'Blue hour wide',vibe:'Private, iconic',cat:'city',q:`${kw} sunrise empty landmark`},
+    {t:`${kw} Cultural Ceremony`,v:`Traditional ceremony unique to ${kw} — people in traditional dress`,shot:'Close-up faces',vibe:'Cultural, documentary',cat:'culture',q:`${kw} traditional culture ceremony`},
+    {t:`${kw} Hidden Alley`,v:`Narrow backstreet in ${kw} that most tourists never find`,shot:'Narrow tracking',vibe:'Discovery, authentic',cat:'city',q:`${kw} hidden alley backstreet local`},
+    {t:`${kw} Night Life`,v:`The energy of ${kw} after 10pm — restaurants, street lights, crowds`,shot:'Night wide',vibe:'Energy, atmospheric',cat:'city',q:`${kw} night life street neon`},
+    {t:`${kw} Local Artisan`,v:`Craftsperson making traditional product unique to ${kw} — close-up hands`,shot:'Macro hands',vibe:'Artisanal, meditative',cat:'culture',q:`${kw} traditional craft artisan hands`},
+    {t:`${kw} Iconic Landmark`,v:`The single most recognisable view in ${kw} representing this place globally`,shot:'Classic wide',vibe:'Iconic, must-see',cat:'culture',q:`${kw} iconic landmark famous view`},
+    {t:`${kw} Nature Escape`,v:`The most stunning natural feature near ${kw} — mountains, water, forest`,shot:'Wide nature',vibe:'Wild, free',cat:'nature',q:`${kw} nature landscape beautiful`},
+    {t:`${kw} Morning Market`,v:`The local market at 6am — vendors, freshness, colour, real local life`,shot:'Documentary',vibe:'Authentic, slow',cat:'culture',q:`${kw} morning market local vendors`},
+    {t:`${kw} Rain Reflection`,v:`${kw} during rain — puddle reflections, umbrellas, wet cobblestones`,shot:'Moody wide',vibe:'Moody, cinematic',cat:'nature',q:`${kw} rain reflection street moody`},
+    {t:`${kw} Luxury Experience`,v:`The most aspirational, exclusive experience ${kw} offers — private, beautiful`,shot:'Cinematic wide',vibe:'Aspirational, luxury',cat:'luxury',q:`${kw} luxury resort hotel pool beautiful`},
+    {t:`${kw} Sunset Silhouette`,v:`Clean silhouette of ${kw}'s most iconic form against a blazing sunset`,shot:'Silhouette wide',vibe:'Dramatic, timeless',cat:'nature',q:`${kw} sunset silhouette sky`},
+    {t:`${kw} Street Portrait`,v:`Intimate portrait of a local at work or daily life — unscripted, genuine`,shot:'Portrait close',vibe:'Human, real',cat:'lifestyle',q:`${kw} local people portrait street`},
+    {t:`${kw} Timelapse`,v:`Time-lapse of the busiest intersection or square in ${kw} over 2 hours`,shot:'Timelapse wide',vibe:'Energy, time',cat:'city',q:`${kw} crowd timelapse busy street`},
+    {t:`${kw} Best Meal`,v:`The one dish everyone must eat in ${kw} — cooked, plated, savoured`,shot:'Food close-up',vibe:'Flavourful, pure',cat:'food',q:`${kw} best local dish food restaurant`},
+    {t:`${kw} Architecture`,v:`The most striking building in ${kw} — pattern, texture, scale, or age`,shot:'Detail tilt-up',vibe:'Structural, impressive',cat:'city',q:`${kw} architecture building detail pattern`},
+    {t:`${kw} Sacred Space`,v:`Temple, mosque, shrine at the most photogenic moment — light, incense, silence`,shot:'Interior sacred',vibe:'Spiritual, quiet',cat:'spiritual',q:`${kw} temple sacred spiritual light`},
+    {t:`${kw} Adventure`,v:`The most thrilling outdoor experience ${kw} offers — action, speed, or height`,shot:'Action wide',vibe:'Adrenaline, energy',cat:'adventure',q:`${kw} adventure outdoor extreme activity`},
+    {t:`${kw} Rooftop View`,v:`Rooftop bar with full ${kw} skyline spread out below at dusk`,shot:'Rooftop wide',vibe:'Elevated, social',cat:'lifestyle',q:`${kw} rooftop terrace view sunset city`},
+    {t:`${kw} Underwater`,v:`Snorkelling or diving showing marine life near ${kw}`,shot:'Underwater horizontal',vibe:'Wonder, blue',cat:'nature',q:`${kw} underwater snorkelling marine coral`},
+    {t:`${kw} Festival`,v:`Local festival in ${kw} at peak colour and energy — movement, costumes, light`,shot:'Wide festival',vibe:'Celebratory, vivid',cat:'culture',q:`${kw} festival celebration colour local`},
+    {t:`${kw} Coffee Culture`,v:`The coffee ritual of ${kw} — independent café, morning routine, steam`,shot:'Café close-up',vibe:'Warm, slow living',cat:'lifestyle',q:`${kw} coffee café morning lifestyle`},
+    {t:`${kw} Old Town`,v:`Preserved historic quarter of ${kw} in the soft light of early morning`,shot:'Wide historic',vibe:'Timeless, golden',cat:'culture',q:`${kw} old town historic quarter morning`},
+    {t:`${kw} Waterfront Night`,v:`Waterfront or harbour of ${kw} reflected in dark water at midnight`,shot:'Night reflection',vibe:'Noir, reflective',cat:'city',q:`${kw} waterfront harbour night reflection`},
+    {t:`${kw} Children at Play`,v:`Children at play in the streets or parks of ${kw} — spontaneous, joyful`,shot:'Documentary close',vibe:'Joy, authentic',cat:'lifestyle',q:`${kw} children play street local life`},
+    {t:`${kw} Seasonal`,v:`${kw} in its most extreme season — deepest winter, peak summer, or monsoon`,shot:'Seasonal wide',vibe:'Elemental, raw',cat:'nature',q:`${kw} season weather landscape dramatic`},
+    {t:`${kw} Street Music`,v:`Live music or street performance unique to ${kw}`,shot:'Performance close',vibe:'Musical, alive',cat:'culture',q:`${kw} music performance live street`},
+    {t:`${kw} Departure`,v:`Bittersweet final view of ${kw} — leaving from airport, train, or harbour`,shot:'Departure wide',vibe:'Emotional, nostalgic',cat:'lifestyle',q:`${kw} travel departure view landscape`},
+  ];
+  return slots.map((s,i)=>({...s,rank:i+1,vol:volEst(s.q),trend:i<3?'hot':i<8?'rising':'stable'}));
+}
+
+// ════════════════════════════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════════════════════════════
+function renderMain() {
+  const main = document.getElementById('resultsArea');
+  if (S.loading) {
+    main.innerHTML = `<div class="res-hdr"><div class="res-kw">${esc(S.keyword)}</div><div class="res-badge">Generating 30 cohorts…</div></div>
+<div class="ai-gen">
+  <div class="ai-spin"></div>
+  <div class="ai-h">Analysing visual trends for <em style="color:var(--navy)">"${esc(S.keyword)}"</em></div>
+  <div class="ai-s">Finding the most commonly filmed content patterns, ranking by content volume, and building your 30 shot cohorts.</div>
+  <div class="ai-steps">
+    <span class="ai-step done">✓ Resolving destination</span>
+    <span class="ai-step go">Generating cohorts…</span>
+    <span class="ai-step">Ranking by volume</span>
+    <span class="ai-step">Building cards</span>
+  </div>
+</div>`;
+    return;
+  }
+  main.innerHTML = `
+<div class="res-hdr">
+  <div class="res-kw">${flag(S.keyword)} ${esc(S.keyword)}</div>
+  <div class="res-badge">${S.cohorts.length} cohorts</div>
+  <div class="res-right">
+    <select class="res-select" id="mediaSort" onchange="setMediaSort(this.value)">
+      <option value="score">Sort: Reel Score</option>
+      <option value="quality">Sort: Quality</option>
+    </select>
+  </div>
+</div>
+<div class="filter-bar" id="filterBar">
+  <span class="fl">Type</span>
+  <div class="fc on" id="ft_all" onclick="setMediaType('all',this)">All</div>
+  <div class="fc" id="ft_photo" onclick="setMediaType('photo',this)">📸 Photos</div>
+  <div class="fc" id="ft_video" onclick="setMediaType('video',this)">🎬 Videos</div>
+  <div class="fsep"></div>
+  <span class="fl">Quality</span>
+  <div class="fc on" id="fq_all" onclick="setResolution('all',this)">All</div>
+  <div class="fc" id="fq_hd" onclick="setResolution('hd',this)">HD+</div>
+  <div class="fc" id="fq_fhd" onclick="setResolution('fhd',this)">Full HD</div>
+  <div class="fsep"></div>
+  <span class="fl">Orientation</span>
+  <div class="fc on" id="fo_all" onclick="setOrientation('all',this)">All</div>
+  <div class="fc" id="fo_p" onclick="setOrientation('portrait',this)">9:16</div>
+  <div class="fc" id="fo_l" onclick="setOrientation('landscape',this)">16:9</div>
+  <div class="fsep"></div>
+  <span class="fl">Source</span>
+  <div class="fc src on" id="fs_pexels" onclick="toggleSrc('pexels',this)">Pexels</div>
+  <div class="fc src on" id="fs_pixabay" onclick="toggleSrc('pixabay',this)">Pixabay</div>
+  <div class="fc src on" id="fs_unsplash" onclick="toggleSrc('unsplash',this)">Unsplash</div>
+</div>
+<div class="cat-bar">
+  <div class="fc on" id="fc_all" onclick="setCatFilter('all',this)">All</div>
+  ${CATS.map(c=>`<div class="fc" id="fc_${c.key}" onclick="setCatFilter('${c.key}',this)">${c.lbl}</div>`).join('')}
+</div>
+<div id="cohortsArea"></div>
+<div id="mediaArea"></div>`;
+  applyCohortFilter();
+}
+
+function applyCohortFilter() {
+  S.filtered = S.catFilter==='all' ? [...S.cohorts] : S.cohorts.filter(c=>c.cat===S.catFilter);
+  renderCohorts();
+}
+
+function renderCohorts() {
+  const area = document.getElementById('cohortsArea'); if(!area) return;
+  if (!S.filtered.length) { area.innerHTML=`<div class="no-media">No cohorts for this category. Try "All".</div>`; return; }
+  area.innerHTML = `<div class="cohorts-grid">${S.filtered.map((c,i)=>cohortCard(c,i)).join('')}</div>`;
+}
+
+function cohortCard(c, idx) {
+  const isTop = c.rank<=3;
+  const trCls = c.trend==='hot'?'tr-hot':c.trend==='rising'?'tr-up':'tr-ok';
+  const trLbl = c.trend==='hot'?'🔥 Hot':c.trend==='rising'?'↑ Rising':'— Stable';
+  const active = S.activeCohort===idx?' active':'';
+  const delay = Math.min(idx*22,400);
+  return `<div class="c-card${active}" style="animation-delay:${delay}ms" onclick="selectCohort(${idx})">
+  <div class="c-top">
+    <div class="c-rank${isTop?' gold':''}">#${c.rank}</div>
+    <div class="c-title">${esc(c.t)}</div>
+    <div class="c-trend ${trCls}">${trLbl}</div>
+  </div>
+  <div class="c-desc">${esc(c.v)}</div>
+  <div class="c-meta">
+    <div class="c-shot">${esc(c.shot)}</div>
+    <div class="c-cat-badge cat-${c.cat}">${c.cat}</div>
+    <div style="font-size:11px;color:var(--text3);font-style:italic;margin-left:2px">${esc(c.vibe)}</div>
+  </div>
+  <div class="c-foot">
+    <div class="c-vol">📊 ${c.vol}</div>
+    <button class="c-go" onclick="event.stopPropagation();searchMedia('${esc(c.q||c.t)}',${idx})">Find media →</button>
+  </div>
+</div>`;
+}
+
+function renderMediaPanel() {
+  const area = document.getElementById('mediaArea'); if(!area) return;
+  const cohort = S.filtered[S.activeCohort]||S.cohorts[S.activeCohort];
+  if (!cohort) { area.innerHTML=''; return; }
+  const shown = S.mediaFiltered.slice(0,S.mediaShown);
+  const hasMore = S.mediaFiltered.length > S.mediaShown;
+  area.innerHTML = `<div class="m-panel">
+  <div class="mp-hdr">
+    <div><div class="mp-title">${esc(cohort.t)}</div><div class="mp-sub">${S.mediaFiltered.length} results · ${S.media.length} total fetched</div></div>
+    <button class="mp-close" onclick="closeMedia()">✕</button>
+  </div>
+  <div class="mp-filters">
+    <span style="font-size:11px;color:var(--text3);font-weight:500;margin-right:2px">Refine:</span>
+    <div class="mpf on" id="mpft_all" onclick="setMpType('all',this)">All</div>
+    <div class="mpf" id="mpft_photo" onclick="setMpType('photo',this)">📸 Photos</div>
+    <div class="mpf" id="mpft_video" onclick="setMpType('video',this)">🎬 Videos</div>
+    <div style="width:1px;height:16px;background:var(--border);margin:0 3px"></div>
+    <div class="mpf on" id="mpfq_all" onclick="setMpRes('all',this)">All Quality</div>
+    <div class="mpf" id="mpfq_hd" onclick="setMpRes('hd',this)">HD+</div>
+    <div class="mpf" id="mpfq_fhd" onclick="setMpRes('fhd',this)">Full HD</div>
+    <div style="width:1px;height:16px;background:var(--border);margin:0 3px"></div>
+    <div class="mpf on" id="mpfo_all" onclick="setMpOri('all',this)">Any</div>
+    <div class="mpf" id="mpfo_p" onclick="setMpOri('portrait',this)">Portrait 9:16</div>
+    <div class="mpf" id="mpfo_l" onclick="setMpOri('landscape',this)">Landscape</div>
+    <div style="width:1px;height:16px;background:var(--border);margin:0 3px"></div>
+    <div class="mpf src-f on" id="mpfs_pexels" onclick="toggleMpSrc('pexels',this)">Pexels</div>
+    <div class="mpf src-f on" id="mpfs_pixabay" onclick="toggleMpSrc('pixabay',this)">Pixabay</div>
+    <div class="mpf src-f on" id="mpfs_unsplash" onclick="toggleMpSrc('unsplash',this)">Unsplash</div>
+    <div style="width:1px;height:16px;background:var(--border);margin:0 3px"></div>
+    <div class="mpf${S.sortMedia==='quality'?' on':''}" id="mps_q" onclick="setMpSort('quality',this)">↑ Quality</div>
+    <div class="mpf${S.sortMedia==='score'?' on':''}" id="mps_s" onclick="setMpSort('score',this)">↑ Reel Score</div>
+  </div>
+  ${S.mediaLoading ? mediaSkels() : mediaGrid(shown)}
+  ${!S.mediaLoading && hasMore ? `<button class="load-more" onclick="loadMore()">Load more (${S.mediaFiltered.length - S.mediaShown} remaining)</button>` : ''}
+</div>`;
+}
+
+function mediaSkels() {
+  const h=[130,200,155,220,140,195,170,155,200,140,160,185];
+  return `<div class="m-skels">${h.map(ht=>`<div class="msk"><div class="msk-i" style="height:${ht}px"></div><div style="padding:8px 10px"><div class="sk-line"></div><div class="sk-line s60"></div></div></div>`).join('')}</div>`;
+}
+
+function mediaGrid(items) {
+  if (!items.length) return `<div class="no-media">No results match your filters. Try relaxing the quality or orientation filter.</div>`;
+  return `<div class="masonry">${items.map((m,i)=>mediaCard(m,i)).join('')}</div>`;
+}
+
+function mediaCard(m, i) {
+  const sc = m.reel_score>=80?'s-hi':m.reel_score>=65?'s-md':'s-lo';
+  const isVid = m.media_type==='video';
+  const dur = m.duration?`${Math.round(m.duration)}s`:'';
+  const w=m.width||0, h=m.height||0;
+  const res = Math.max(w,h)>=1920?'4K/FHD':Math.max(w,h)>=1280?'HD':'';
+  return `<div class="m-card" style="animation-delay:${Math.min(i*28,500)}ms">
+  ${m.thumbnail_url?`<img class="m-thumb" src="${esc(m.thumbnail_url)}" loading="lazy" onerror="this.style.display='none'" alt="">`:
+    `<div class="m-thumb" style="height:120px;display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--bg5)">${isVid?'🎬':'📸'}</div>`}
+  ${isVid?`<div class="m-vbadge"><div class="play-tri"></div>${dur}</div>`:''}
+  <div class="m-score ${sc}">${Math.round(m.reel_score)}</div>
+  <div class="m-actions">
+    ${m.source_url?`<a class="m-act" href="${esc(m.source_url)}" target="_blank" title="View on ${m.source}">↗</a>`:''}
+    ${m.download_url&&m.commercial_use?`<a class="m-act" href="${esc(m.download_url)}" target="_blank" title="Download">↓</a>`:''}
+  </div>
+  <div class="m-body">
+    <div class="m-ttl">${esc(m.title||'Media')}</div>
+    <div class="m-meta">
+      <span class="m-src">${m.source}</span>
+      <span class="m-lic ${m.attribution_req?'lic-at':'lic-ok'}">${m.attribution_req?'⚠ Attr':'✓ Free'}</span>
+      ${dur?`<span class="m-dur">${dur}</span>`:''}
+      ${res?`<span class="m-res">${res}</span>`:''}
+    </div>
+  </div>
+</div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+//  MEDIA SEARCH
+// ════════════════════════════════════════════════════════════
+async function selectCohort(idx) {
+  S.activeCohort = idx;
+  const cohort = S.filtered[idx]||S.cohorts[idx]; if(!cohort) return;
+  await searchMedia(cohort.q||cohort.t, idx);
+}
+
+async function searchMedia(query, idx) {
+  S.activeCohort = typeof idx==='number'?idx:S.activeCohort;
+  S.media=[]; S.mediaFiltered=[]; S.mediaLoading=true;
+  renderCohorts(); renderMediaPanel();
+  setTimeout(()=>{ const el=document.getElementById('mediaArea'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); },100);
+  const [p,px,u] = await Promise.all([fetchPexels(query),fetchPixabay(query),fetchUnsplash(query)]);
+  S.media = dedup(scoreMedia([...p,...px,...u],query));
+  S.mediaLoading = false;
+  applyMediaFilter();
+  setTimeout(()=>{ const el=document.getElementById('mediaArea'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); },100);
+}
+
+function applyMediaFilter() {
+  let items = [...S.media];
+  if (S.mediaType!=='all') items=items.filter(m=>m.media_type===S.mediaType);
+  if (S.resolution==='hd')  items=items.filter(m=>Math.max(m.width||0,m.height||0)>=720);
+  if (S.resolution==='fhd') items=items.filter(m=>Math.max(m.width||0,m.height||0)>=1080);
+  if (S.orientation==='portrait')  items=items.filter(m=>(m.height||0)>(m.width||0));
+  if (S.orientation==='landscape') items=items.filter(m=>(m.width||0)>(m.height||0));
+  items=items.filter(m=>S.activeSrcs.has(m.source));
+  items.sort((a,b)=>b[S.sortMedia==='quality'?'quality_score':'reel_score']-a[S.sortMedia==='quality'?'quality_score':'reel_score']);
+  S.mediaFiltered=items; S.mediaShown=20;
+  renderMediaPanel();
+}
+
+function closeMedia() {
+  S.media=[]; S.mediaFiltered=[]; S.activeCohort=null;
+  renderCohorts();
+  const a=document.getElementById('mediaArea'); if(a) a.innerHTML='';
+}
+
+function loadMore() { S.mediaShown+=20; renderMediaPanel(); }
+
+async function fetchPexels(q) {
+  if(!K.pexels) return [];
+  try {
+    const [ph,vi]=await Promise.all([
+      fetch(`https://api.pexels.com/v1/search?query=${enc(q)}&per_page=20`,{headers:{Authorization:K.pexels}}).then(r=>r.json()),
+      fetch(`https://api.pexels.com/videos/search?query=${enc(q)}&per_page=15`,{headers:{Authorization:K.pexels}}).then(r=>r.json()),
+    ]);
+    const photos=(ph.photos||[]).map(p=>({source:'pexels',media_type:'photo',source_url:p.url,download_url:p.src?.original||'',thumbnail_url:p.src?.medium||'',preview_url:p.src?.large||'',width:p.width,height:p.height,duration:null,title:p.alt||`Pexels – ${q}`,photographer:p.photographer,commercial_use:true,attribution_req:false,tags:[q]}));
+    const videos=(vi.videos||[]).map(v=>{const files=(v.video_files||[]).sort((a,b)=>(b.height||0)-(a.height||0));const best=files.find(f=>(f.height||0)>=720)||files[0]||{};const pic=(v.video_pictures||[])[0]?.picture||'';return{source:'pexels',media_type:'video',source_url:v.url,download_url:best.link||'',thumbnail_url:pic,preview_url:pic,width:v.width,height:v.height,duration:v.duration,fps:best.fps,title:`Pexels Video – ${q}`,photographer:(v.user||{}).name||'',commercial_use:true,attribution_req:false,tags:[q,'video']};});
+    return [...photos,...videos];
+  }catch(e){return [];}
+}
+
+async function fetchPixabay(q) {
+  if(!K.pixabay) return [];
+  try {
+    const [im,vi]=await Promise.all([
+      fetch(`https://pixabay.com/api/?key=${K.pixabay}&q=${enc(q)}&per_page=20&safesearch=true`).then(r=>r.json()),
+      fetch(`https://pixabay.com/api/videos/?key=${K.pixabay}&q=${enc(q)}&per_page=15`).then(r=>r.json()),
+    ]);
+    const photos=(im.hits||[]).map(p=>({source:'pixabay',media_type:'photo',source_url:p.pageURL,download_url:p.largeImageURL||p.webformatURL,thumbnail_url:p.previewURL,preview_url:p.webformatURL,width:p.imageWidth,height:p.imageHeight,duration:null,title:`Pixabay – ${q}`,photographer:p.user,commercial_use:true,attribution_req:false,tags:(p.tags||'').split(',').map(t=>t.trim())}));
+    const videos=(vi.hits||[]).map(v=>{const src=v.videos?.large||v.videos?.medium||v.videos?.small||{};return{source:'pixabay',media_type:'video',source_url:v.pageURL,download_url:src.url||'',thumbnail_url:`https://i.vimeocdn.com/video/${v.picture_id}_640x360.jpg`,preview_url:'',width:src.width||0,height:src.height||0,duration:v.duration,title:`Pixabay Video – ${q}`,photographer:v.user,commercial_use:true,attribution_req:false,tags:(v.tags||'').split(',').map(t=>t.trim())};});
+    return [...photos,...videos];
+  }catch(e){return [];}
+}
+
+async function fetchUnsplash(q) {
+  if(!K.unsplash) return [];
+  try {
+    const r=await fetch(`https://api.unsplash.com/search/photos?query=${enc(q)}&per_page=25`,{headers:{Authorization:`Client-ID ${K.unsplash}`}});
+    const d=await r.json();
+    return (d.results||[]).map(p=>({source:'unsplash',media_type:'photo',source_url:p.links?.html||'',download_url:p.urls?.full||'',thumbnail_url:p.urls?.thumb||'',preview_url:p.urls?.regular||'',width:p.width,height:p.height,duration:null,title:p.description||p.alt_description||`Unsplash – ${q}`,photographer:(p.user||{}).name||'',commercial_use:true,attribution_req:false,tags:(p.tags||[]).map(t=>t.title||'')}));
+  }catch(e){return [];}
+}
+
+const AE = new Set(['sunset','sunrise','golden','aerial','drone','cinematic','beautiful','stunning','serene','bokeh','misty','foggy','travel','explore','moody','dramatic','minimal','soft','warm','dreamy']);
+
+function scoreMedia(items, keyword) {
+  const kw = keyword.toLowerCase().split(/\s+/);
+  return items.map(item=>{
+    const text=`${item.title||''} ${(item.tags||[]).join(' ')}`.toLowerCase();
+    const kwHits=kw.filter(w=>text.includes(w)).length/Math.max(kw.length,1);
+    const aHits=text.split(/\s+/).filter(w=>AE.has(w)).length;
+    const w=item.width||1,h=item.height||1,aspect=h/w;
+    const aspScore=aspect>=1.6&&aspect<=2.0?15:aspect>=1.0?5:-12;
+    const srcScore={pexels:80,unsplash:82,pixabay:72}[item.source]||65;
+    const res=Math.min(100,40+((w*h)/1e6)*4);
+    const vidBonus=item.media_type==='video'?8:0;
+    const durBonus=item.duration>=5&&item.duration<=20?8:item.duration>20&&item.duration<=45?3:0;
+    const reel_score=Math.min(100,Math.round(kwHits*30+aHits*5+aspScore+srcScore*0.3+res*0.2+vidBonus+durBonus));
+    return{...item,reel_score,quality_score:Math.round(res),relevance_score:Math.round(kwHits*100)};
+  });
+}
+
+function dedup(items){const seen=new Set();return items.filter(item=>{const key=item.thumbnail_url||item.source_url;if(seen.has(key))return false;seen.add(key);return true;});}
+
+// ════════════════════════════════════════════════════════════
+//  FILTER SETTERS
+// ════════════════════════════════════════════════════════════
+function setCatFilter(cat,btn){S.catFilter=cat;tog('[id^="fc_"]',btn);applyCohortFilter();}
+function setMediaType(v,btn){S.mediaType=v;tog('[id^="ft_"]',btn);applyMediaFilter();}
+function setResolution(v,btn){S.resolution=v;tog('[id^="fq_"]',btn);applyMediaFilter();}
+function setOrientation(v,btn){S.orientation=v;tog('[id^="fo_"]',btn);applyMediaFilter();}
+function toggleSrc(src,btn){if(S.activeSrcs.has(src))S.activeSrcs.delete(src);else S.activeSrcs.add(src);btn.classList.toggle('on');applyMediaFilter();}
+function setMediaSort(v){S.sortMedia=v;applyMediaFilter();}
+function setMpType(v,btn){S.mediaType=v;tog('[id^="mpft_"]',btn);applyMediaFilter();}
+function setMpRes(v,btn){S.resolution=v;tog('[id^="mpfq_"]',btn);applyMediaFilter();}
+function setMpOri(v,btn){S.orientation=v;tog('[id^="mpfo_"]',btn);applyMediaFilter();}
+function toggleMpSrc(src,btn){if(S.activeSrcs.has(src))S.activeSrcs.delete(src);else S.activeSrcs.add(src);btn.classList.toggle('on');applyMediaFilter();}
+function setMpSort(v,btn){S.sortMedia=v;tog('[id^="mps_"]',btn);applyMediaFilter();}
+function tog(sel,active){document.querySelectorAll(sel).forEach(b=>b.classList.remove('on'));if(active)active.classList.add('on');}
+
+// ════════════════════════════════════════════════════════════
+//  HISTORY & SAVED
+// ════════════════════════════════════════════════════════════
+function addToHistory(kw){let h=JSON.parse(localStorage.getItem('rb_history')||'[]');h=[{kw,ts:Date.now()},...h.filter(x=>x.kw!==kw)].slice(0,12);localStorage.setItem('rb_history',JSON.stringify(h));renderHistory();}
+function renderHistory(){const el=document.getElementById('historyList');if(!el)return;const h=JSON.parse(localStorage.getItem('rb_history')||'[]');el.innerHTML=h.length?h.map(x=>`<div class="h-item" onclick="kw('${esc(x.kw)}')"><span>⏱</span><span style="flex:1">${esc(x.kw)}</span><span class="h-time">${timeAgo(x.ts)}</span></div>`).join(''):`<div class="h-empty">No searches yet</div>`;}
+function clearHistory(){localStorage.removeItem('rb_history');renderHistory();toast('History cleared');}
+
+function toggleSave(){if(!S.keyword)return;let saves=JSON.parse(localStorage.getItem('rb_saved')||'[]');const ex=saves.includes(S.keyword);if(ex)saves=saves.filter(s=>s!==S.keyword);else saves.push(S.keyword);localStorage.setItem('rb_saved',JSON.stringify(saves));document.getElementById('saveBtn').classList.toggle('saved',!ex);renderSaved();toast(ex?'Search removed':'⊕ Search saved');}
+function renderSaved(){const el=document.getElementById('savedList');if(!el)return;const saves=JSON.parse(localStorage.getItem('rb_saved')||'[]');el.innerHTML=saves.length?saves.map(s=>`<div class="saved-item" onclick="kw('${esc(s)}')"><span>⊕</span><span>${esc(s)}</span></div>`).join(''):`<div class="h-empty">No saved searches</div>`;}
+function clearSaved(){localStorage.removeItem('rb_saved');renderSaved();toast('Saved searches cleared');}
+
+// ════════════════════════════════════════════════════════════
+//  MODAL
+// ════════════════════════════════════════════════════════════
+function openModal(){document.getElementById('modalBg').classList.add('open');loadModalInputs();updateKeysStatus();}
+function closeModal(){document.getElementById('modalBg').classList.remove('open');}
+function handleBgClick(e){if(e.target===document.getElementById('modalBg'))closeModal();}
+function loadModalInputs(){['pexels','pixabay','unsplash','anthropic'].forEach(k=>{const el=document.getElementById(`k_${k}`);const v=localStorage.getItem(`rb_${k}`);if(el&&v){el.value=v;el.classList.add('sv');}});}
+function saveKeys(){['pexels','pixabay','unsplash','anthropic'].forEach(k=>{const val=document.getElementById(`k_${k}`)?.value?.trim();if(val){localStorage.setItem(`rb_${k}`,val);document.getElementById(`k_${k}`).classList.add('sv');}});updateKeysStatus();toast('✓ API keys saved');setTimeout(closeModal,800);}
+function updateKeysStatus(){const el=document.getElementById('keysStatus');if(!el)return;const has=K.pexels||K.pixabay||K.unsplash;const ai=!!K.anthropic;el.innerHTML=`<div class="ks ${has?'ks-good':'ks-warn'}">${has?'✓ Live media search enabled':'⚠ No search keys — add at least one below'}<br>${ai?'✓ AI cohort generation enabled (Claude)':'+ Add Anthropic key for AI cohorts on any keyword'}</div>`;}
+
+// ════════════════════════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════════════════════════
+function goHome(){
+  S.keyword=''; S.cohorts=[]; S.media=[];
+  document.getElementById('q').value='';
+  const hero = document.getElementById('hero');
+  if (hero) hero.style.display = 'flex';
+  const ra = document.getElementById('resultsArea');
+  if (ra) ra.innerHTML = '';
+}
+const FLAGS={'bali':'🇮🇩','tokyo':'🇯🇵','paris':'🇫🇷','dubai':'🇦🇪','maldives':'🇲🇻','iceland':'🇮🇸','morocco':'🇲🇦','seoul':'🇰🇷','santorini':'🇬🇷','capetown':'🇿🇦','cape town':'🇿🇦','india':'🇮🇳','vietnam':'🇻🇳','singapore':'🇸🇬','amsterdam':'🇳🇱','sydney':'🇦🇺','london':'🇬🇧','newyork':'🇺🇸','new york':'🇺🇸','nyc':'🇺🇸','kyoto':'🇯🇵','istanbul':'🇹🇷','rome':'🇮🇹','thailand':'🇹🇭'};
+function flag(c){return FLAGS[c.toLowerCase()]||'🌍';}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function enc(s){return encodeURIComponent(s);}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+function timeAgo(ts){const s=Math.round((Date.now()-ts)/1000);if(s<60)return 'just now';if(s<3600)return`${Math.round(s/60)}m ago`;if(s<86400)return`${Math.round(s/3600)}h ago`;return`${Math.round(s/86400)}d ago`;}
+</script>
+</body>
+</html>
